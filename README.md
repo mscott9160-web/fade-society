@@ -61,6 +61,8 @@ Install dependencies:
 npm install
 ```
 
+To opt into the future Supabase adapter, copy `.env.example` to `.env.local` and fill in the public project values. Without `EXPO_PUBLIC_DATA_MODE=supabase`, the app stays in local demo mode.
+
 Start the web preview:
 
 ```powershell
