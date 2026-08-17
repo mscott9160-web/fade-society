@@ -1,0 +1,55 @@
+import React, { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { getBarberProfile, services } from '@/domain/catalog';
+import { formatBookingDate, makeSlotDate } from '@/domain/date';
+import { useAppStore } from '@/state/app-store';
+import type { Service } from '@/domain/models';
+
+type Step = 'profile' | 'service' | 'time' | 'review';
+
+export default function BookScreen() {
+	const { barberId } = useLocalSearchParams<{ barberId?: string }>();
+	const router = useRouter();
+	const { bookings, addBooking } = useAppStore();
+	const profile = barberId ? getBarberProfile(barberId) : undefined;
+	const [step, setStep] = useState<Step>('profile');
+	const [selectedService, setSelectedService] = useState<Service | null>(null);
+	const [selectedTime, setSelectedTime] = useState('');
+	const times = useMemo(() => [9, 11, 13, 15, 17].flatMap((hour) => [0, 1].map((day) => makeSlotDate(day, hour))), []);
+	const reserved = new Set(bookings.filter((booking) => booking.barberId === barberId && booking.status !== 'cancelled').map((booking) => booking.startsAt));
+
+	if (!profile) {
+		return <SafeAreaView style={styles.safeArea}><View style={styles.empty}><Text style={styles.title}>Barber profile unavailable</Text><Text style={styles.copy}>This studio could not be loaded. Return to Find and choose another profile.</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/explore')} style={styles.primary}><Text style={styles.primaryText}>Back to Find</Text></Pressable></View></SafeAreaView>;
+	}
+	const currentProfile = profile;
+
+	function chooseService(service: Service) {
+		setSelectedService(service);
+		setSelectedTime('');
+		setStep('time');
+	}
+
+	function confirm() {
+		if (!selectedService || !selectedTime) return;
+		const id = addBooking({ serviceId: selectedService.id, serviceName: selectedService.name, barberId: currentProfile.barber.id, barberName: currentProfile.barber.name, studioId: currentProfile.studio.id, studioName: currentProfile.studio.name, startsAt: selectedTime, price: selectedService.price });
+		router.replace({ pathname: '/confirmation/[id]', params: { id } });
+	}
+
+	return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>
+		<Pressable accessibilityRole="button" onPress={() => router.replace('/explore')} style={styles.back}><Text style={styles.link}>Back to Find</Text></Pressable>
+		<View style={styles.profile}><View style={styles.avatar} /><Text style={[styles.title, styles.profileTitle]}>{profile.barber.name}</Text><Text style={[styles.meta, styles.profileMeta]}>{profile.studio.name} • {profile.barber.rating.toFixed(1)} stars</Text><Text style={[styles.meta, styles.profileMeta]}>{profile.studio.address} • {profile.studio.distance}</Text><Text style={styles.specialty}>{profile.barber.specialty}</Text></View>
+
+		{step === 'profile' && <><Text style={styles.sectionTitle}>Services</Text>{services.map((service) => <Pressable key={service.id} accessibilityRole="button" accessibilityLabel={`Choose ${service.name}, ${service.durationMinutes} minutes, $${service.price}`} onPress={() => chooseService(service)} style={styles.row}><View><Text style={styles.rowTitle}>{service.name}</Text><Text style={styles.meta}>{service.durationMinutes} minutes</Text></View><Text style={styles.price}>${service.price}</Text></Pressable>)}</>}
+		{step === 'service' && <Text style={styles.sectionTitle}>Choose a service</Text>}
+		{step === 'time' && <><Text style={styles.sectionTitle}>Choose a time</Text><Text style={styles.copy}>Select an available appointment for {selectedService?.name}.</Text><View style={styles.grid}>{times.map((time) => { const taken = reserved.has(time); return <Pressable key={time} disabled={taken} accessibilityRole="button" accessibilityState={{ selected: selectedTime === time, disabled: taken }} onPress={() => setSelectedTime(time)} style={[styles.timeButton, selectedTime === time && styles.active, taken && styles.taken]}><Text style={[styles.timeText, selectedTime === time && styles.activeText]}>{formatBookingDate(time)}{taken ? ' (Taken)' : ''}</Text></Pressable>; })}</View></>}
+		{step === 'review' && selectedService && <View><Text style={styles.sectionTitle}>Review appointment</Text><View style={styles.review}><Text style={styles.rowTitle}>{selectedService.name}</Text><Text style={styles.meta}>{selectedService.durationMinutes} minutes</Text><Text style={styles.meta}>{formatBookingDate(selectedTime)}</Text><Text style={styles.meta}>{profile.studio.name} • {profile.studio.address}</Text><Text style={styles.price}>${selectedService.price}</Text><Text style={styles.policy}>Free cancellation up to 24 hours before your appointment.</Text></View></View>}
+
+		<View style={styles.actions}>{step === 'profile' ? null : <Pressable accessibilityRole="button" onPress={() => setStep(step === 'review' ? 'time' : step === 'time' ? 'profile' : 'profile')} style={styles.secondary}><Text style={styles.secondaryText}>Back</Text></Pressable>}{step === 'time' && <Pressable accessibilityRole="button" disabled={!selectedTime} onPress={() => setStep('review')} style={[styles.primary, !selectedTime && styles.disabled]}><Text style={styles.primaryText}>Review booking</Text></Pressable>}{step === 'review' && <Pressable accessibilityRole="button" onPress={confirm} style={styles.primary}><Text style={styles.primaryText}>Confirm request</Text></Pressable>}</View>
+	</ScrollView></SafeAreaView>;
+}
+
+const styles = StyleSheet.create({
+	safeArea: { flex: 1, backgroundColor: '#F5F0EA' }, container: { padding: 18, paddingBottom: 50 }, back: { minHeight: 44, justifyContent: 'center' }, link: { color: '#8A6A3A', fontWeight: '800' }, profile: { backgroundColor: '#171717', borderRadius: 20, padding: 20, alignItems: 'center', marginBottom: 20 }, avatar: { width: 74, height: 74, borderRadius: 37, backgroundColor: '#D9B778', marginBottom: 12 }, title: { color: '#171717', fontSize: 26, fontWeight: '800', textAlign: 'center' }, profileTitle: { color: '#FFF' }, meta: { color: '#736C62', marginTop: 5 }, profileMeta: { color: '#D4CCC4' }, specialty: { color: '#D9B778', fontWeight: '800', marginTop: 12 }, sectionTitle: { color: '#171717', fontSize: 20, fontWeight: '800', marginBottom: 12 }, row: { backgroundColor: '#FFF', borderRadius: 14, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, minHeight: 64 }, rowTitle: { color: '#171717', fontWeight: '800', fontSize: 16 }, price: { color: '#171717', fontWeight: '800', fontSize: 16 }, copy: { color: '#736C62', lineHeight: 20, marginBottom: 12 }, grid: { gap: 8 }, timeButton: { backgroundColor: '#FFF', borderRadius: 12, padding: 14, minHeight: 52, justifyContent: 'center' }, timeText: { color: '#171717', fontWeight: '700' }, active: { backgroundColor: '#171717' }, activeText: { color: '#FFF' }, taken: { opacity: 0.4 }, review: { backgroundColor: '#FFF', borderRadius: 16, padding: 18, gap: 6 }, policy: { color: '#8C4A1D', backgroundColor: '#FCE7D5', padding: 10, borderRadius: 10, marginTop: 10 }, actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 20 }, primary: { minHeight: 48, paddingHorizontal: 18, borderRadius: 12, backgroundColor: '#171717', alignItems: 'center', justifyContent: 'center' }, primaryText: { color: '#FFF', fontWeight: '800' }, secondary: { minHeight: 48, paddingHorizontal: 18, borderRadius: 12, backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center' }, secondaryText: { color: '#171717', fontWeight: '800' }, disabled: { opacity: 0.45 }, empty: { padding: 24 },
+});
