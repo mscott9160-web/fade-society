@@ -100,6 +100,25 @@ npx expo export --platform ios --clear
 
 Fade Society is an internal demo and architecture foundation, not a public production marketplace.
 
+### Progress Tracker
+
+**Overall status:** Active development | Internal demo
+
+| Area | Status | Progress |
+| --- | --- | --- |
+| Customer booking journey | In progress | Core discovery, booking, confirmation, messaging, cancellation, and recovery flows are demonstrated. |
+| Demo safety and accessibility | In progress | Local demo labeling, resettable seed data, persistence recovery, and primary-flow accessibility are in place. VoiceOver, TalkBack, Dynamic Type, and contrast audit remain. |
+| Backend and authentication | In progress | Supabase schema, authorization scaffolding, repository contracts, and booking RPC scaffolding are available. Live adapters, authentication, and server enforcement remain. |
+| Provider and manager operations | Planned | Barber Today, availability management, studio overview, team, utilization, cancellations, and reports remain. |
+| Payments and marketplace operations | Planned | Payments, refunds, payouts, disputes, reconciliation, and financial audit tools remain. |
+| Production release | Planned | Monitoring, protected CI/CD, security scanning, store readiness, closed beta, and rollout gates remain. |
+
+**What stakeholders can review now:** the customer booking experience, the architecture direction, the documented release gates, and the known limitations of the local demo.
+
+**What is not represented as complete:** live bookings, real users, production authorization, payments, provider operations, analytics, or public marketplace readiness.
+
+For detailed milestones and exit criteria, see [docs/production-roadmap.md](docs/production-roadmap.md).
+
 The next production milestones are:
 
 1. Connect the Supabase schema and authentication.
