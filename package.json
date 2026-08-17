@@ -2,6 +2,7 @@
   "name": "fade-society",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "description": "Mobile-first barber discovery and booking demo built with Expo and React Native.",
   "dependencies": {
     "@expo/ui": "~57.0.11",
     "@expo/vector-icons": "^15.0.2",

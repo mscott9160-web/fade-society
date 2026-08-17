@@ -1,81 +1,81 @@
-# Welcome to your Expo app 👋
-
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-
 # Fade Society
 
-Fade Society is an Expo development demo for discovering barbers and managing appointments. It is currently an internal prototype, not a public marketplace.
+Fade Society is a mobile-first barber discovery and booking experience built with Expo, React Native, TypeScript, and Expo Router.
 
-## Current Scope
+The project demonstrates a complete customer booking journey while laying out the architecture for a multi-role marketplace serving customers, barbers, studio owners, and platform administrators.
 
-- Customer discovery, studio search, barber profiles, service selection, and local demo bookings.
-- Barber and owner demo views through the clearly labeled Demo role control.
-- Local demo state only. There is no authentication, backend, payment processing, live availability, notifications, or production support workflow yet.
-- The authoritative Expo Router tree is `src/app`.
+## Product Demo
 
-## Run
+The current demo supports:
+
+- Browse barbers and studios
+- View a barber profile
+- Select a service
+- Select an available time
+- Review appointment details
+- Submit a booking request
+- View confirmation details
+- Reschedule, cancel, and restore demo bookings
+- View booking-linked conversations
+- Configure appearance and accessibility preferences
+- Preview customer, barber, owner, and admin roles in demo settings
+
+The local demo intentionally does not process real payments or use a live booking backend yet.
+
+## Technical Highlights
+
+- Expo SDK 57 and React Native
+- TypeScript domain models for users, studios, barbers, services, availability, bookings, and messages
+- Expo Router navigation for iOS, Android, and web
+- Shared typed application store with validated local state
+- Booking status transitions and local double-booking protection
+- Accessibility labels and selected/disabled states across the primary flow
+- Vitest contract and domain tests
+- ESLint and TypeScript quality gates
+- Supabase/PostgreSQL schema and transactional booking RPC scaffold
+- EAS development build configuration for iOS
+
+## Architecture
+
+The authoritative Expo Router tree is `src/app`.
+
+```text
+src/
+  app/                 Screens and route modules
+  components/          Shared navigation and UI components
+  data/                Repository interfaces and backend contracts
+  domain/              Typed models, catalog data, and date utilities
+  state/               Local demo store and booking mutations
+supabase/
+  migrations/          PostgreSQL schema and booking RPC scaffold
+  functions/           Edge Function contract scaffolding
+tests/                 Domain and repository contract tests
+docs/                  Production roadmap and phase notes
+```
+
+## Run Locally
+
+Install dependencies:
 
 ```powershell
 npm install
-npx expo start --dev-client --clear
 ```
 
-For the installed iPhone development build, open the build from the EAS project page, then run the command above from the project directory.
+Start the web preview:
 
-## Quality Gates
+```powershell
+npm run web
+```
+
+Start the iOS development client over LAN:
+
+```powershell
+npx expo start --dev-client --lan --clear --port 8081
+```
+
+The iOS development build must be installed on the registered device before using the development-client command. The app is not currently intended for Expo Go because the project uses a custom development build workflow.
+
+## Quality Checks
 
 ```powershell
 npm test -- --run
@@ -84,20 +84,29 @@ npx tsc --noEmit
 npx expo export --platform ios --clear
 ```
 
-## Demo Flow
+## Demo Walkthrough
 
-1. Home -> Find a barber.
-2. Search/filter studios.
-3. Open a barber profile.
-4. Select a service, date, and time.
-5. Review and confirm the appointment.
-6. Verify it in Bookings.
-7. Reschedule, cancel, restore, and view it in Calendar.
-8. Use Profile -> Demo role to preview barber and owner surfaces.
-9. Use Profile -> Reset demo data before repeating a stakeholder demo.
+1. Open Home or Explore.
+2. Select a barber.
+3. Select a service and available time.
+4. Review and submit the booking request.
+5. Open Bookings to reschedule or cancel.
+6. Open Messages to contact the studio or report a problem.
+7. Open Settings for appearance, accessibility, and internal demo-role previews.
 
-## Roadmap
+## Project Status
 
-See [docs/production-roadmap.md](docs/production-roadmap.md) for the ordered path from demo foundation to a production marketplace.
+Fade Society is an internal demo and architecture foundation, not a public production marketplace.
 
-Phase 1 details are in [docs/phase-1-foundation.md](docs/phase-1-foundation.md).
+The next production milestones are:
+
+1. Connect the Supabase schema and authentication.
+2. Replace local booking mutations with server-authoritative transactions.
+3. Add barber and studio-owner operational dashboards.
+4. Add payments, notifications, support operations, monitoring, and release automation.
+
+See [docs/production-roadmap.md](docs/production-roadmap.md) for the full release plan.
+
+## License
+
+See [LICENSE](LICENSE).
