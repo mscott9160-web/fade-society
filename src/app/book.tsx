@@ -43,7 +43,7 @@ export default function BookScreen() {
 	}, [barberId, listAvailability, listServices, live]);
 
 	if (!profile) {
-		return <SafeAreaView style={styles.safeArea}><View style={styles.empty}><Text style={styles.title}>Barber profile unavailable</Text><Text style={styles.copy}>This studio could not be loaded. Return to Find and choose another profile.</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/explore')} style={styles.primary}><Text style={styles.primaryText}>Back to Find</Text></Pressable></View></SafeAreaView>;
+		return <SafeAreaView style={styles.safeArea}><View style={styles.empty}><Text style={styles.title}>Barber profile unavailable</Text><Text style={styles.copy}>This studio could not be loaded. Return to Find and choose another profile.</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/find')} style={styles.primary}><Text style={styles.primaryText}>Back to Find</Text></Pressable></View></SafeAreaView>;
 	}
 	const currentProfile = profile;
 
@@ -73,8 +73,8 @@ export default function BookScreen() {
 	}
 
 	return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>
-		<Pressable accessibilityRole="button" onPress={() => router.replace('/explore')} style={styles.back}><Text style={styles.link}>Back to Find</Text></Pressable>
-		<View style={styles.profile}><View style={styles.avatar} /><Text style={[styles.title, styles.profileTitle]}>{profile.barber.name}</Text><Text style={[styles.meta, styles.profileMeta]}>{profile.studio.name} • {profile.barber.rating.toFixed(1)} stars</Text><Text style={[styles.meta, styles.profileMeta]}>{profile.studio.address} • {profile.studio.distance}</Text><Text style={styles.specialty}>{profile.barber.specialty}</Text></View>
+		<Pressable accessibilityRole="button" onPress={() => router.replace('/find')} style={styles.back}><Text style={styles.link}>Back to Find</Text></Pressable>
+		<View style={styles.profile}><View style={styles.avatar} /><Text style={[styles.title, styles.profileTitle]}>{profile.barber.name}</Text><Text style={[styles.meta, styles.profileMeta]}>{profile.studio.name} • {profile.barber.rating > 0 ? `${profile.barber.rating} stars` : 'Rating unavailable'}</Text><Text style={[styles.meta, styles.profileMeta]}>{profile.studio.address} • {profile.studio.distance || 'Distance unavailable'}</Text><Text style={styles.specialty}>{profile.barber.specialty}</Text></View>
 
 		{catalogLoading || loading ? <Text style={styles.copy}>Loading live services and availability...</Text> : error || catalogError ? <Text accessibilityRole="alert" style={styles.copy}>{error ?? catalogError}</Text> : <>{step === 'profile' && <><Text style={styles.sectionTitle}>Services</Text>{availableServices.length === 0 ? <Text style={styles.copy}>No services are available for this barber.</Text> : availableServices.map((service) => <Pressable key={service.id} accessibilityRole="button" accessibilityLabel={`Choose ${service.name}, ${service.durationMinutes} minutes, $${service.price}`} onPress={() => chooseService(service)} style={styles.row}><View><Text style={styles.rowTitle}>{service.name}</Text><Text style={styles.meta}>{service.durationMinutes} minutes</Text></View><Text style={styles.price}>${service.price}</Text></Pressable>)}</>}</>}
 		{step === 'service' && <Text style={styles.sectionTitle}>Choose a service</Text>}
