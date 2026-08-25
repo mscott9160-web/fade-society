@@ -77,6 +77,63 @@ npx expo start --dev-client --lan --clear --port 8081
 
 The iOS development build must be installed on the registered device before using the development-client command. The app is not currently intended for Expo Go because the project uses a custom development build workflow.
 
+## Supabase Onboarding
+
+The Supabase schema is an onboarding scaffold. The seed is catalog-first and safe to rerun; it does not create Auth users and does not contain service-role credentials.
+
+### SQL Editor Order
+
+In the Supabase Dashboard, open **SQL Editor** and run these scripts in this exact order:
+
+1. `supabase/migrations/0001_initial_schema.sql`
+2. `supabase/migrations/0002_booking_rpc.sql`
+3. `supabase/migrations/0003_profile_provisioning.sql`
+4. `supabase/migrations/0004_provider_profile_read_policy.sql`
+5. `supabase/seed.sql`
+
+Run each script separately and confirm it completes before running the next one. The first three scripts create the schema, booking RPC, and Auth profile trigger. Migration `0004` adds the narrow authenticated catalog read for active barber profile names while retaining self-read and denying unrelated profiles; it does not add client mutation policies. The seed creates two studios and four services immediately. It also contains a guarded provider setup block that does nothing until the matching Auth user exists. On reruns, existing availability slot state is preserved so a booked slot is never reopened by the seed.
+
+### Auth User and Provider Profile
+
+After the SQL scripts finish, open **Authentication > Users** and create a user manually:
+
+- Email: `barber.demo@example.com`
+- Password: use a local-only password managed in the dashboard
+- Confirm the email if the project requires email confirmation for sign-in
+
+Do not add this user with SQL and do not use a service-role key in the app. The profile trigger creates the corresponding `public.users` row with the default `customer` role. Rerun `supabase/seed.sql` after creating the user; its guarded block then changes that row to `barber`, adds the downtown studio membership, creates the barber record, and adds future availability slots. Verify the result in **Table Editor** under `users`, `studio_memberships`, `barbers`, and `availability_slots`.
+
+For a different provider email, change the email lookup and display name in the guarded block of `supabase/seed.sql` before running it. The provider UUID is always taken from the existing Auth user, so the seed never guesses or creates an `auth.users` record. Customer accounts can be created through the normal Auth flow; their profile is provisioned by the same trigger.
+
+### Local Supabase Environment
+
+Copy the example file and fill it with the public values shown in **Project Settings > API**:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Set these values in `.env.local`:
+
+```dotenv
+EXPO_PUBLIC_DATA_MODE=supabase
+EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
+```
+
+Only use the project URL and publishable/anon key in the Expo client. Never place `service_role`, secret keys, database passwords, or the `.p8` App Store Connect key in `.env.local` or any app file. Keep `.env.local` uncommitted; it is ignored by git.
+
+### Run With Supabase
+
+From the repository root:
+
+```powershell
+npm install
+npx expo start --dev-client --lan --clear --port 8081
+```
+
+Install the iOS development build on the registered device, then open the project from the development client. The app uses local demo data unless `EXPO_PUBLIC_DATA_MODE=supabase` is set. The Supabase adapter and live booking flow remain scaffolding, so use the local mode for the complete demo journey.
+
 ## Quality Checks
 
 ```powershell
