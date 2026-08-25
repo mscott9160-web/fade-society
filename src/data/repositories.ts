@@ -8,6 +8,11 @@ export type AuthCredentials = {
 
 export type AuthStateListener = (user: User | null, error?: Error) => void;
 
+export type AuthResult = {
+  user: User | null;
+  requiresEmailConfirmation: boolean;
+};
+
 export type CreateBookingInput = {
   serviceId: string;
   barberId: string;
@@ -37,8 +42,8 @@ export type MessageRepository = {
 export type SessionRepository = {
   getCurrentUser: () => Promise<User | null>;
   subscribeToAuthState: (listener: AuthStateListener) => () => void;
-  signIn: (credentials: AuthCredentials) => Promise<User | null>;
-  signUp: (credentials: AuthCredentials) => Promise<User | null>;
+  signIn: (credentials: AuthCredentials) => Promise<AuthResult>;
+  signUp: (credentials: AuthCredentials) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   updateRoleForDemo: (role: Role) => Promise<User>;
 };

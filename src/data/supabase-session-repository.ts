@@ -1,6 +1,6 @@
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import type { Role, User } from '@/domain/models';
-import type { AuthCredentials, AuthStateListener, SessionRepository } from './repositories';
+import type { AuthCredentials, AuthResult, AuthStateListener, SessionRepository } from './repositories';
 import { getSupabaseClient } from './supabase-client';
 
 type SessionClient = {
@@ -40,6 +40,8 @@ export function createSupabaseSessionRepository(client?: SessionClient | null): 
     return mapProfile(authUser, result.data, result.error);
   };
 
+  let authStateVersion = 0;
+
   const getCurrentUser = async () => {
     const result = await requireClient().auth.getUser();
     if (result.error) throw result.error;
@@ -48,23 +50,29 @@ export function createSupabaseSessionRepository(client?: SessionClient | null): 
 
   const subscribeToAuthState = (listener: AuthStateListener) => {
     const result = requireClient().auth.onAuthStateChange((_event, session) => {
+      const version = ++authStateVersion;
       if (!session?.user) {
         listener(null);
         return;
       }
       void getProfile(session.user)
-        .then((user) => listener(user))
-        .catch((error: unknown) => listener(null, error instanceof Error ? error : new Error(String(error))));
+        .then((user) => {
+          if (version === authStateVersion) listener(user);
+        })
+        .catch((error: unknown) => {
+          if (version === authStateVersion) listener(null, error instanceof Error ? error : new Error(String(error)));
+        });
     });
     return () => result.data.subscription.unsubscribe();
   };
 
-  const authenticate = async (credentials: AuthCredentials, mode: 'signIn' | 'signUp') => {
+  const authenticate = async (credentials: AuthCredentials, mode: 'signIn' | 'signUp'): Promise<AuthResult> => {
     const result = mode === 'signIn'
       ? await requireClient().auth.signInWithPassword(credentials)
       : await requireClient().auth.signUp({ email: credentials.email, password: credentials.password, options: { data: credentials.displayName ? { display_name: credentials.displayName } : undefined } });
     if (result.error) throw result.error;
-    return getProfile(result.data.user);
+    const user = await getProfile(result.data.user);
+    return { user, requiresEmailConfirmation: mode === 'signUp' && !result.data.user };
   };
 
   return {

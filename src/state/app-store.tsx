@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import type { Booking, BookingStatus, Message, PersistedState, Role, User, UserPreferences } from '@/domain/models';
+import type { AuthCredentials, AuthResult } from '@/data/repositories';
 import { addBooking, appendMessage, defaultPreferences, markMessagesRead, seedBookings, seedMessages, updateBookingStatus, updateBookingTime, validatePersistedState } from './app-store-core';
 import { getDataMode } from '@/data/supabase-client';
 import { createSupabaseSessionRepository } from '@/data/supabase-session-repository';
@@ -14,6 +15,7 @@ type AppStore = {
   preferences: UserPreferences;
   hydrated: boolean;
   authBootstrapState: 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+  authError: string | null;
   persistenceError: string | null;
   addBooking: (booking: Omit<Booking, 'id' | 'status' | 'confirmationCode' | 'cancellationPolicy'>) => string;
   rescheduleBooking: (id: string, startsAt: string) => void;
@@ -25,6 +27,10 @@ type AppStore = {
   markMessagesRead: (participantId: string) => void;
   clearPersistenceError: () => void;
   updatePreferences: (changes: Partial<UserPreferences>) => void;
+  signIn: (credentials: AuthCredentials) => Promise<AuthResult>;
+  signUp: (credentials: AuthCredentials) => Promise<AuthResult>;
+  signOut: () => Promise<void>;
+  retryAuthBootstrap: () => Promise<void>;
 };
 
 const STORAGE_KEY = 'fade-society-demo-state-v1';
@@ -54,6 +60,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(() => getDataMode() !== 'local');
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [authBootstrapState, setAuthBootstrapState] = useState<AppStore['authBootstrapState']>(() => getDataMode() === 'local' ? 'unauthenticated' : 'loading');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const authRequestVersion = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -86,18 +94,22 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const repository = createSupabaseSessionRepository();
-    void repository.getCurrentUser()
-      .then((user) => {
-        if (!active) return;
+    const loadCurrentUser = async () => {
+      const version = ++authRequestVersion.current;
+      try {
+        const user = await repository.getCurrentUser();
+        if (!active || version !== authRequestVersion.current) return;
         setCurrentUser(user);
         if (user) setRole(user.role);
         setAuthBootstrapState(user ? 'authenticated' : 'unauthenticated');
-      })
-      .catch(() => {
-        if (active) setAuthBootstrapState('error');
-      });
+      } catch {
+        if (active && version === authRequestVersion.current) setAuthBootstrapState('error');
+      }
+    };
+    void loadCurrentUser();
     const unsubscribe = repository.subscribeToAuthState((user, error) => {
       if (!active) return;
+      authRequestVersion.current += 1;
       if (error) {
         setAuthBootstrapState('error');
         return;
@@ -130,6 +142,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     preferences,
     hydrated,
     authBootstrapState,
+    authError,
     persistenceError,
     setRole: (nextRole) => {
       if (getDataMode() === 'local') setRole(nextRole);
@@ -155,7 +168,55 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     markMessagesRead: (participantId) => setMessages((current) => markMessagesRead(current, participantId)),
     clearPersistenceError: () => setPersistenceError(null),
     updatePreferences: (changes) => setPreferences((current) => ({ ...current, ...changes })),
-  }), [authBootstrapState, bookings, currentUser, hydrated, messages, persistenceError, preferences, role]);
+    signIn: async (credentials) => {
+      if (getDataMode() === 'local') return { user: null, requiresEmailConfirmation: false };
+      setAuthError(null);
+      try {
+        return await createSupabaseSessionRepository().signIn(credentials);
+      } catch (error) {
+        setAuthError(error instanceof Error ? error.message : String(error));
+        throw error;
+      }
+    },
+    signUp: async (credentials) => {
+      if (getDataMode() === 'local') return { user: null, requiresEmailConfirmation: false };
+      setAuthError(null);
+      try {
+        return await createSupabaseSessionRepository().signUp(credentials);
+      } catch (error) {
+        setAuthError(error instanceof Error ? error.message : String(error));
+        throw error;
+      }
+    },
+    signOut: async () => {
+      if (getDataMode() === 'local') return;
+      setAuthError(null);
+      try {
+        await createSupabaseSessionRepository().signOut();
+      } catch (error) {
+        setAuthError(error instanceof Error ? error.message : String(error));
+        throw error;
+      }
+    },
+    retryAuthBootstrap: async () => {
+      if (getDataMode() === 'local') return;
+      const version = ++authRequestVersion.current;
+      setAuthError(null);
+      setAuthBootstrapState('loading');
+      try {
+        const user = await createSupabaseSessionRepository().getCurrentUser();
+        if (version !== authRequestVersion.current) return;
+        setCurrentUser(user);
+        if (user) setRole(user.role);
+        setAuthBootstrapState(user ? 'authenticated' : 'unauthenticated');
+      } catch (error) {
+        if (version !== authRequestVersion.current) return;
+        setAuthError(error instanceof Error ? error.message : String(error));
+        setAuthBootstrapState('error');
+        throw error;
+      }
+    },
+  }), [authBootstrapState, authError, bookings, currentUser, hydrated, messages, persistenceError, preferences, role]);
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>;
 }
