@@ -1,5 +1,13 @@
 import type { AvailabilitySlot, Barber, Booking, Message, Role, Service, Studio, User } from '@/domain/models';
 
+export type AuthCredentials = {
+  email: string;
+  password: string;
+  displayName?: string;
+};
+
+export type AuthStateListener = (user: User | null, error?: Error) => void;
+
 export type CreateBookingInput = {
   serviceId: string;
   barberId: string;
@@ -28,6 +36,9 @@ export type MessageRepository = {
 
 export type SessionRepository = {
   getCurrentUser: () => Promise<User | null>;
+  subscribeToAuthState: (listener: AuthStateListener) => () => void;
+  signIn: (credentials: AuthCredentials) => Promise<User | null>;
+  signUp: (credentials: AuthCredentials) => Promise<User | null>;
   signOut: () => Promise<void>;
   updateRoleForDemo: (role: Role) => Promise<User>;
 };

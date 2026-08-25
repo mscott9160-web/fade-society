@@ -23,7 +23,7 @@ describe('Phase 3 repository contracts', () => {
   it('keeps catalog, message, and session responsibilities separate', () => {
     const catalog: CatalogRepository = { listStudios: async () => [], listBarbers: async () => [], listServices: async () => [], listAvailability: async () => [] };
     const messages: MessageRepository = { listThreads: async () => [], send: async () => { throw new Error('not implemented'); }, markRead: async () => undefined };
-    const session: SessionRepository = { getCurrentUser: async () => null, signOut: async () => undefined, updateRoleForDemo: async (role) => ({ id: 'demo', displayName: 'Demo', role }) };
+    const session: SessionRepository = { getCurrentUser: async () => null, subscribeToAuthState: () => () => undefined, signIn: async () => null, signUp: async () => null, signOut: async () => undefined, updateRoleForDemo: async (role) => ({ id: 'demo', displayName: 'Demo', role }) };
     expect(catalog.listAvailability).toBeTypeOf('function');
     expect(messages.markRead).toBeTypeOf('function');
     expect(session.getCurrentUser).toBeTypeOf('function');

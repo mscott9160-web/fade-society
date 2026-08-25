@@ -1,3 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+
 export type SupabaseClientConfig = {
   url: string;
   anonKey: string;
@@ -19,3 +22,22 @@ export function getDataMode(): DataMode {
 
 // The anon key is client-safe; service-role keys must only exist in Edge Functions.
 export const supabaseClientConfig = getSupabaseClientConfig();
+
+let supabaseClient: SupabaseClient | null | undefined;
+
+export function getSupabaseClient(): SupabaseClient | null {
+  if (supabaseClient !== undefined) return supabaseClient;
+  if (!supabaseClientConfig) {
+    supabaseClient = null;
+    return supabaseClient;
+  }
+  supabaseClient = createClient(supabaseClientConfig.url, supabaseClientConfig.anonKey, {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  });
+  return supabaseClient;
+}
