@@ -3,19 +3,24 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '@/state/app-store';
+import { getDataMode } from '@/data/supabase-client';
+import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { bookings, resetDemoData } = useAppStore();
+  const { bookings, currentUser, resetDemoData } = useAppStore();
+  const theme = useCustomerTheme();
+  const localMode = getDataMode() === 'local';
   const confirmed = bookings.filter((booking) => booking.status !== 'cancelled').length;
+  const name = currentUser?.displayName || (localMode ? 'Demo customer' : 'Customer');
 
   return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>
-    <Text style={styles.title}>Profile</Text>
-    <View style={styles.profileCard}><View style={styles.avatar} /><Text style={styles.name}>Darius Cole</Text><Text style={styles.handle}>@dariusfade</Text><Text style={styles.bio}>Your barber history, saved styles, and upcoming appointments.</Text></View>
-    <View style={styles.stats}><View style={styles.stat}><Text style={styles.value}>{confirmed}</Text><Text style={styles.label}>Bookings</Text></View><View style={styles.stat}><Text style={styles.value}>12</Text><Text style={styles.label}>Saved</Text></View><View style={styles.stat}><Text style={styles.value}>4.9</Text><Text style={styles.label}>Reviews</Text></View></View>
-    <View style={styles.card}><Text style={styles.cardTitle}>Your preferences</Text><Text style={styles.cardText}>Favorite studio: Northline Studio</Text><Text style={styles.cardText}>Preferred service: Classic fades</Text><Text style={styles.cardText}>Notifications: Enabled</Text></View>
+    <Text style={[styles.title, { color: theme.text, fontSize: 32 * theme.textScale }]}>Profile</Text>
+    <View style={[styles.profileCard, { backgroundColor: theme.inverseSurface }]}><View style={styles.avatar} /><Text style={styles.name}>{name}</Text>{localMode && <Text style={styles.handle}>Local demo mode</Text>}<Text style={styles.bio}>Manage your account and upcoming appointments.</Text></View>
+    <View style={styles.stats}><View style={[styles.stat, { backgroundColor: theme.surface }]}><Text style={[styles.value, { color: theme.text, fontSize: 20 * theme.textScale }]}>{confirmed}</Text><Text style={[styles.label, { color: theme.secondaryText }]}>Bookings</Text></View></View>
+    <View style={[styles.card, { backgroundColor: theme.surface }]}><Text style={[styles.cardTitle, { color: theme.text }]}>Booking summary</Text><Text style={[styles.cardText, { color: theme.secondaryText }]}>{confirmed === 0 ? 'No upcoming or past bookings yet.' : `${confirmed} booking${confirmed === 1 ? '' : 's'} on your account.`}</Text></View>
     <Pressable accessibilityRole="button" accessibilityLabel="Open settings" accessibilityHint="Change appearance and accessibility preferences" onPress={() => router.push('/settings')} style={styles.primary}><Text style={styles.primaryText}>Settings</Text></Pressable>
-    <Pressable accessibilityRole="button" accessibilityLabel="Reset demo data" onPress={resetDemoData} style={styles.reset}><Text style={styles.resetText}>Reset demo data</Text></Pressable>
+    {localMode && <Pressable accessibilityRole="button" accessibilityLabel="Reset demo data" onPress={resetDemoData} style={styles.reset}><Text style={styles.resetText}>Reset demo data</Text></Pressable>}
   </ScrollView></SafeAreaView>;
 }
 

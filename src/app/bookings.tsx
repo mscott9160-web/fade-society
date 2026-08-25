@@ -5,10 +5,12 @@ import { formatBookingDate, makeSlotDate } from '@/domain/date';
 import { useAppStore } from '@/state/app-store';
 import type { Booking } from '@/domain/models';
 import { getDataMode } from '@/data/supabase-client';
+import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 export default function BookingsScreen() {
   const { bookings, hydrated, persistenceError, bookingLoading, bookingError, rescheduleBooking, cancelBooking, restoreBooking } = useAppStore();
   const live = getDataMode() === 'supabase';
+    const theme = useCustomerTheme();
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedSlot, setSelectedSlot] = useState('');
   const upcoming = bookings.filter((booking) => booking.status !== 'cancelled' && booking.status !== 'completed');
@@ -16,13 +18,14 @@ export default function BookingsScreen() {
   const slots = useMemo(() => [9, 11, 13, 15, 17].flatMap((hour) => [0, 1].map((day) => makeSlotDate(day, hour))), []);
 
   if (!hydrated || bookingLoading) return <SafeAreaView style={styles.safeArea}><View style={styles.empty}><Text style={styles.title}>Loading your bookings...</Text></View></SafeAreaView>;
+  if (!hydrated || bookingLoading) return <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}><View style={styles.empty}><Text style={[styles.title, { color: theme.text, fontSize: 32 * theme.textScale }]}>Loading your bookings...</Text></View></SafeAreaView>;
 
   return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>
-    <Text style={styles.title}>Bookings</Text>
-    <Text style={styles.subtitle}>Your appointments, all in one place.</Text>
+    <Text style={[styles.title, { color: theme.text, fontSize: 32 * theme.textScale }]}>Bookings</Text>
+    <Text style={[styles.subtitle, { color: theme.secondaryText, fontSize: 14 * theme.textScale }]}>Your appointments, all in one place.</Text>
     {persistenceError && <Text accessibilityRole="alert" style={styles.warning}>{persistenceError}</Text>}
     {bookingError && <Text accessibilityRole="alert" style={styles.warning}>{bookingError}</Text>}
-    {upcoming.length === 0 && <View style={styles.emptyCard}><Text style={styles.sectionTitle}>Nothing booked yet</Text><Text style={styles.subtitle}>Find a barber and choose a time that works for you.</Text></View>}
+      {upcoming.length === 0 && <View style={[styles.emptyCard, { backgroundColor: theme.surface }]}><Text style={[styles.sectionTitle, { color: theme.text, fontSize: 18 * theme.textScale }]}>Nothing booked yet</Text><Text style={[styles.subtitle, { color: theme.secondaryText }]}>Find a barber and choose a time that works for you.</Text></View>}
     {upcoming.map((booking) => <BookingCard key={booking.id} booking={booking} live={live} onReschedule={() => { setSelectedBooking(booking); setSelectedSlot(booking.startsAt); }} onCancel={() => Alert.alert('Cancel appointment?', 'This will send a cancellation request for this appointment.', [{ text: 'Keep appointment', style: 'cancel' }, { text: 'Cancel appointment', style: 'destructive', onPress: () => cancelBooking(booking.id) }])} />)}
     {past.length > 0 && <><Text style={styles.sectionTitle}>Past appointments</Text>{past.map((booking) => <View key={booking.id} style={[styles.card, styles.mutedCard]}><Text style={styles.service}>{booking.serviceName}</Text><Text style={styles.meta}>{formatBookingDate(booking.startsAt)} • {booking.barberName}</Text><Text accessibilityRole="text" style={styles.status}>Status: {booking.status}</Text>{!live && booking.status === 'cancelled' && <Pressable accessibilityRole="button" accessibilityLabel={`Restore ${booking.serviceName}`} onPress={() => restoreBooking(booking.id)} style={styles.secondaryButton}><Text style={styles.secondaryText}>Restore booking</Text></Pressable>}{!live && (booking.status === 'declined' || booking.status === 'failed') && <Pressable accessibilityRole="button" accessibilityLabel={`Choose another time for ${booking.serviceName}`} onPress={() => Alert.alert('Try another time', 'Choose another available slot from the barber profile.')} style={styles.secondaryButton}><Text style={styles.secondaryText}>Choose another time</Text></Pressable>}</View>)}</>}
   </ScrollView>

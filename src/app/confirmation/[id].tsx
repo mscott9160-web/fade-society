@@ -5,10 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatBookingDate } from '@/domain/date';
 import { useAppStore } from '@/state/app-store';
 import { getDataMode } from '@/data/supabase-client';
+import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 export default function ConfirmationScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
+  const theme = useCustomerTheme();
+  const styles = createStyles(theme);
   const { bookings, hydrated, bookingLoading, bookingError, getBooking } = useAppStore();
   const [loadedBooking, setLoadedBooking] = React.useState<typeof bookings[number] | null>(null);
   const [lookupLoading, setLookupLoading] = React.useState(false);
@@ -46,4 +49,7 @@ export default function ConfirmationScreen() {
   </ScrollView></SafeAreaView>;
 }
 
-const styles = StyleSheet.create({ safeArea: { flex: 1, backgroundColor: '#F5F0EA' }, container: { padding: 18, paddingBottom: 48 }, success: { backgroundColor: '#171717', borderRadius: 20, padding: 22, alignItems: 'center', marginTop: 18 }, check: { color: '#D9B778', fontSize: 38, fontWeight: '800' }, successTitle: { color: '#FFF', fontSize: 23, fontWeight: '800', marginTop: 8 }, successCopy: { color: '#E7DED4', textAlign: 'center', lineHeight: 20, marginTop: 8 }, title: { color: '#171717', fontSize: 28, fontWeight: '800' }, card: { backgroundColor: '#FFF', borderRadius: 18, padding: 18, marginTop: 16, borderWidth: 1, borderColor: '#E9DED0' }, label: { color: '#736C62', textTransform: 'uppercase', fontSize: 11, fontWeight: '800' }, code: { color: '#8A6A3A', fontSize: 22, fontWeight: '800', marginTop: 4, marginBottom: 18 }, service: { color: '#171717', fontSize: 19, fontWeight: '800' }, detail: { color: '#736C62', marginTop: 8 }, policy: { color: '#8C4A1D', backgroundColor: '#FCE7D5', borderRadius: 10, padding: 10, marginTop: 16 }, actions: { gap: 10, marginTop: 18 }, primary: { minHeight: 48, borderRadius: 12, backgroundColor: '#171717', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }, primaryText: { color: '#FFF', fontWeight: '800' }, secondary: { minHeight: 48, borderRadius: 12, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#E0D6C9', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }, secondaryText: { color: '#171717', fontWeight: '800' } });
+function createStyles(theme: ReturnType<typeof useCustomerTheme>) {
+  const scaled = (size: number) => size * theme.textScale;
+  return StyleSheet.create({ safeArea: { flex: 1, backgroundColor: theme.background }, container: { padding: 18, paddingBottom: 48 }, success: { backgroundColor: theme.inverseSurface, borderRadius: 20, padding: 22, alignItems: 'center', marginTop: 18 }, check: { color: theme.accent, fontSize: scaled(38), fontWeight: '800' }, successTitle: { color: theme.inverseText, fontSize: scaled(23), fontWeight: '800', marginTop: 8 }, successCopy: { color: theme.secondaryText, textAlign: 'center', fontSize: scaled(14), lineHeight: scaled(20), marginTop: 8 }, title: { color: theme.text, fontSize: scaled(28), fontWeight: '800' }, card: { backgroundColor: theme.surface, borderRadius: 18, padding: 18, marginTop: 16, borderWidth: 1, borderColor: theme.border }, label: { color: theme.secondaryText, textTransform: 'uppercase', fontSize: scaled(11), fontWeight: '800' }, code: { color: theme.accent, fontSize: scaled(22), fontWeight: '800', marginTop: 4, marginBottom: 18 }, service: { color: theme.text, fontSize: scaled(19), fontWeight: '800' }, detail: { color: theme.secondaryText, fontSize: scaled(14), marginTop: 8 }, policy: { color: theme.accent, backgroundColor: theme.background, borderRadius: 10, padding: 10, marginTop: 16, fontSize: scaled(14) }, actions: { gap: 10, marginTop: 18 }, primary: { minHeight: 48, borderRadius: 12, backgroundColor: theme.inverseSurface, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }, primaryText: { color: theme.inverseText, fontWeight: '800', fontSize: scaled(14) }, secondary: { minHeight: 48, borderRadius: 12, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }, secondaryText: { color: theme.text, fontWeight: '800', fontSize: scaled(14) } });
+}

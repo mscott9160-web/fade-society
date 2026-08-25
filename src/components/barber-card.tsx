@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Barber, Studio } from '@/domain/models';
+import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 type BarberCardProps = {
   barber: Barber;
@@ -9,14 +10,15 @@ type BarberCardProps = {
 };
 
 export function BarberCard({ barber, studio, onPress }: BarberCardProps) {
+  const theme = useCustomerTheme();
   const rating = barber.rating > 0 ? `${barber.rating} stars` : 'Rating unavailable';
-  return <Pressable accessibilityRole="button" accessibilityLabel={`Open ${barber.name} profile at ${studio?.name ?? 'studio unavailable'}`} onPress={onPress} style={styles.card}>
+  return <Pressable accessibilityRole="button" accessibilityLabel={`Open ${barber.name} profile at ${studio?.name ?? 'studio unavailable'}`} accessibilityHint="Opens this barber profile and booking options" onPress={onPress} style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
     <View>
-      <Text style={styles.name}>{barber.name}</Text>
-      <Text style={styles.studio}>{studio?.name ?? 'Studio unavailable'}</Text>
-      <Text style={styles.detail}>{barber.specialty} • {rating}</Text>
+      <Text style={[styles.name, { color: theme.text, fontSize: 17 * theme.textScale }]}>{barber.name}</Text>
+      <Text style={[styles.studio, { color: theme.secondaryText, fontSize: 14 * theme.textScale }]}>{studio?.name ?? 'Studio unavailable'}</Text>
+      <Text style={[styles.detail, { color: theme.secondaryText, fontSize: 12 * theme.textScale }]}>{barber.specialty} • {rating}</Text>
     </View>
-    <Text style={styles.action}>View & book</Text>
+    <Text style={[styles.action, { color: theme.accent, fontSize: 14 * theme.textScale }]}>View & book</Text>
   </Pressable>;
 }
 

@@ -7,12 +7,15 @@ import { formatBookingDate, groupBookingTimes, makeSlotDate } from '@/domain/dat
 import { useAppStore } from '@/state/app-store';
 import type { Service } from '@/domain/models';
 import { getDataMode } from '@/data/supabase-client';
+import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 type Step = 'profile' | 'service' | 'time' | 'review';
 
 export default function BookScreen() {
 	const { barberId } = useLocalSearchParams<{ barberId?: string }>();
 	const router = useRouter();
+	const theme = useCustomerTheme();
+	const styles = createStyles(theme);
 	const { bookings, addBooking, createBooking, listServices, listAvailability, barbers, studios, catalogLoading, catalogError } = useAppStore();
 	const live = getDataMode() === 'supabase';
 	const localProfile = barberId ? getBarberProfile(barberId) : undefined;
@@ -86,6 +89,8 @@ export default function BookScreen() {
 	</ScrollView></SafeAreaView>;
 }
 
-const styles = StyleSheet.create({
+function createStyles(theme: ReturnType<typeof useCustomerTheme>) {
+	return StyleSheet.create({
 	safeArea: { flex: 1, backgroundColor: '#F5F0EA' }, container: { padding: 18, paddingBottom: 50 }, back: { minHeight: 44, justifyContent: 'center' }, link: { color: '#8A6A3A', fontWeight: '800' }, profile: { backgroundColor: '#171717', borderRadius: 20, padding: 20, alignItems: 'center', marginBottom: 20 }, avatar: { width: 74, height: 74, borderRadius: 37, backgroundColor: '#D9B778', marginBottom: 12 }, title: { color: '#171717', fontSize: 26, fontWeight: '800', textAlign: 'center' }, profileTitle: { color: '#FFF' }, meta: { color: '#736C62', marginTop: 5 }, profileMeta: { color: '#D4CCC4' }, specialty: { color: '#D9B778', fontWeight: '800', marginTop: 12 }, profileSpecialty: { marginTop: 0, marginBottom: 8 }, sectionTitle: { color: '#171717', fontSize: 20, fontWeight: '800', marginBottom: 12 }, row: { backgroundColor: '#FFF', borderRadius: 14, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, minHeight: 64 }, rowTitle: { color: '#171717', fontWeight: '800', fontSize: 16 }, price: { color: '#171717', fontWeight: '800', fontSize: 16 }, copy: { color: '#736C62', lineHeight: 20, marginBottom: 12 }, grid: { gap: 8 }, timeButton: { backgroundColor: '#FFF', borderRadius: 12, padding: 14, minHeight: 52, justifyContent: 'center' }, timeText: { color: '#171717', fontWeight: '700' }, active: { backgroundColor: '#171717' }, activeText: { color: '#FFF' }, taken: { opacity: 0.4 }, review: { backgroundColor: '#FFF', borderRadius: 16, padding: 18, gap: 6 }, policy: { color: '#8C4A1D', backgroundColor: '#FCE7D5', padding: 10, borderRadius: 10, marginTop: 10 }, actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 20 }, primary: { minHeight: 48, paddingHorizontal: 18, borderRadius: 12, backgroundColor: '#171717', alignItems: 'center', justifyContent: 'center' }, primaryText: { color: '#FFF', fontWeight: '800' }, secondary: { minHeight: 48, paddingHorizontal: 18, borderRadius: 12, backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center' }, secondaryText: { color: '#171717', fontWeight: '800' }, disabled: { opacity: 0.45 }, empty: { padding: 24 },
 });
+}

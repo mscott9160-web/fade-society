@@ -1,30 +1,29 @@
 import { Link, Slot, usePathname } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/theme';
 import { customerTabs } from './customer-tabs';
+import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 // Web has no native tab bar, so this renders any matched route via Slot
 // instead of a separate isolated tab navigator that could swallow pushes.
 export default function AppTabs() {
   const pathname = usePathname();
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const customerTheme = useCustomerTheme();
 
   return (
     <View style={styles.root}>
       <View style={styles.content}>
         <Slot />
       </View>
-      <SafeAreaView edges={['bottom']} style={[styles.tabBar, { backgroundColor: colors.background, borderTopColor: colors.backgroundElement }]}>
+      <SafeAreaView edges={['bottom']} style={[styles.tabBar, { backgroundColor: customerTheme.surface, borderTopColor: customerTheme.border }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabRow}>
           {customerTabs.map((tab) => {
             const active = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);
             return (
               <Link key={tab.href} href={tab.href} asChild>
                 <Pressable accessibilityRole="button" accessibilityLabel={tab.label} accessibilityState={{ selected: active }} style={styles.tabButton}>
-                  <Text style={[styles.tabText, active && { color: colors.text, fontWeight: '800' }]}>{tab.label}</Text>
+                  <Text style={[styles.tabText, { color: customerTheme.secondaryText, fontSize: 14 * customerTheme.textScale }, active && { color: customerTheme.text, fontWeight: '800' }]}>{tab.label}</Text>
                 </Pressable>
               </Link>
             );

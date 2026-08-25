@@ -9,6 +9,7 @@ import { AppStoreProvider, useAppStore } from '@/state/app-store';
 import DemoStatusBanner from '@/components/demo-status-banner';
 import AuthEntryScreen from '@/components/auth-entry-screen';
 import { getDataMode } from '@/data/supabase-client';
+import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,10 +24,11 @@ export default function TabLayout() {
 
 function ThemedApp({ colorScheme }: { colorScheme: ReturnType<typeof useColorScheme> }) {
   const { preferences, authBootstrapState, authError, retryAuthBootstrap } = useAppStore();
+  const customerTheme = useCustomerTheme();
   useEffect(() => {
     void SplashScreen.hideAsync();
   }, []);
-  const app = <ThemeProvider value={preferences.darkMode || colorScheme === 'dark' ? DarkTheme : DefaultTheme}><DemoStatusBanner /><AnimatedSplashOverlay /><AppTabs /></ThemeProvider>;
+  const app = <ThemeProvider value={preferences.darkMode || colorScheme === 'dark' ? DarkTheme : DefaultTheme}><View style={{ flex: 1, backgroundColor: customerTheme.background }}><DemoStatusBanner /><AnimatedSplashOverlay /><AppTabs /></View></ThemeProvider>;
   if (getDataMode() === 'local') return app;
   if (authBootstrapState === 'loading') return <ThemeProvider value={DefaultTheme}><View style={styles.state}><ActivityIndicator accessibilityLabel="Loading account" size="large" color="#8A6A3A" /><Text style={styles.stateTitle}>Loading your account</Text></View></ThemeProvider>;
   if (authBootstrapState === 'error') return <ThemeProvider value={DefaultTheme}><View style={styles.state}><Text accessibilityRole="alert" style={styles.stateTitle}>We could not connect your account.</Text><Text style={styles.stateMessage}>{authError || 'Please try again.'}</Text><Pressable accessibilityRole="button" accessibilityLabel="Retry account connection" onPress={() => { void retryAuthBootstrap().catch(() => undefined); }} style={styles.retry}><Text style={styles.retryText}>Retry</Text></Pressable></View></ThemeProvider>;

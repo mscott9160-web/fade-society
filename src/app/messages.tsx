@@ -3,16 +3,18 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '@/state/app-store';
+import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 export default function MessagesScreen() {
   const router = useRouter();
   const { messages } = useAppStore();
+  const theme = useCustomerTheme();
   const participants = Array.from(new Map(messages.map((message) => [message.participantId, message])).values());
 
-  return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>
-    <Text style={styles.title}>Messages</Text><Text style={styles.subtitle}>Stay connected to your barber and studio.</Text>
-    <Pressable accessibilityRole="button" accessibilityLabel="Contact Fade Society support" accessibilityHint="Opens support contact details" onPress={() => Alert.alert('Fade Society support', 'For this demo, contact support at support@fadesociety.example.')} style={styles.supportCard}><Text style={styles.supportTitle}>Need help with a booking?</Text><Text style={styles.supportText}>Contact Fade Society support</Text></Pressable>
-    {participants.map((message) => <Pressable key={message.participantId} accessibilityRole="button" accessibilityLabel={`Conversation with ${message.participantName}${message.unread ? ', unread' : ''}`} accessibilityHint="Opens this conversation" onPress={() => router.push({ pathname: '/messages/[id]', params: { id: message.participantId } })} style={styles.row}><View style={styles.avatar} /><View style={styles.copy}><View style={styles.top}><Text style={styles.name}>{message.participantName}</Text>{message.unread && <Text accessibilityRole="text" style={styles.unread}>Unread</Text>}</View><Text style={styles.preview}>{message.body}</Text></View></Pressable>)}
+  return <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}><ScrollView contentContainerStyle={styles.container}>
+    <Text style={[styles.title, { color: theme.text, fontSize: 32 * theme.textScale }]}>Messages</Text><Text style={[styles.subtitle, { color: theme.secondaryText, fontSize: 14 * theme.textScale }]}>Stay connected to your barber and studio.</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel="Contact Fade Society support" accessibilityHint="Opens support contact details" onPress={() => Alert.alert('Fade Society support', 'For this demo, contact support at support@fadesociety.example.')} style={[styles.supportCard, { backgroundColor: theme.inverseSurface }]}><Text style={[styles.supportTitle, { color: theme.inverseText, fontSize: 15 * theme.textScale }]}>Need help with a booking?</Text><Text style={[styles.supportText, { color: theme.accent, fontSize: 14 * theme.textScale }]}>Contact Fade Society support</Text></Pressable>
+    {participants.map((message) => <Pressable key={message.participantId} accessibilityRole="button" accessibilityLabel={`Conversation with ${message.participantName}${message.unread ? ', unread' : ''}`} accessibilityHint="Opens this conversation" onPress={() => router.push({ pathname: '/messages/[id]', params: { id: message.participantId } })} style={[styles.row, { backgroundColor: theme.surface, borderColor: theme.border }]}><View style={styles.avatar} /><View style={styles.copy}><View style={styles.top}><Text style={[styles.name, { color: theme.text, fontSize: 14 * theme.textScale }]}>{message.participantName}</Text>{message.unread && <Text accessibilityRole="text" style={[styles.unread, { color: theme.accent }]}>Unread</Text>}</View><Text style={[styles.preview, { color: theme.secondaryText, fontSize: 14 * theme.textScale }]}>{message.body}</Text></View></Pressable>)}
     {participants.length === 0 && <View style={styles.empty}><Text style={styles.emptyTitle}>No messages yet</Text><Text style={styles.subtitle}>Your barber or studio will appear here after you book.</Text></View>}
   </ScrollView></SafeAreaView>;
 }

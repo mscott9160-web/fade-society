@@ -80,6 +80,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [authBootstrapState, setAuthBootstrapState] = useState<AppStore['authBootstrapState']>(() => getDataMode() === 'local' ? 'unauthenticated' : 'loading');
   const [authError, setAuthError] = useState<string | null>(null);
   const authRequestVersion = useRef(0);
+  const authenticatedUserId = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -140,9 +141,19 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       }
       setCurrentUser(user);
       if (user) {
+        if (authenticatedUserId.current !== null && authenticatedUserId.current !== user.id) {
+          setBookings([]);
+          setMessages([]);
+          setPreferences(defaultPreferences);
+          setBookingError(null);
+          setPersistenceError(null);
+          setHydrated(false);
+        }
+        authenticatedUserId.current = user.id;
         setRole(user.role);
         setAuthBootstrapState('authenticated');
       } else {
+        authenticatedUserId.current = null;
         setRole('customer');
         setBookings([]);
         setMessages([]);
