@@ -2,19 +2,17 @@ import React from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAppStore, Role } from '@/state/app-store';
+import { useAppStore } from '@/state/app-store';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { preferences, updatePreferences, role, setRole } = useAppStore();
-  const roles: Role[] = ['customer', 'barber', 'owner', 'admin'];
+  const { preferences, updatePreferences } = useAppStore();
 
   return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>
     <View style={styles.header}><Pressable accessibilityRole="button" accessibilityLabel="Back to profile" onPress={() => router.back()} style={styles.back}><Text style={styles.backText}>Back</Text></Pressable><Text style={styles.title}>Settings</Text><View style={styles.spacer} /></View>
     <Text style={styles.subtitle}>Customize your Fade Society experience.</Text>
     <View style={styles.section}><Text style={styles.sectionTitle}>Appearance</Text><SettingRow label="Dark mode" description="Use a darker color theme throughout the app." value={preferences.darkMode} onValueChange={(value) => updatePreferences({ darkMode: value })} /><SettingRow label="Larger text" description="Increase text sizing for easier reading." value={preferences.largeText} onValueChange={(value) => updatePreferences({ largeText: value })} /></View>
     <View style={styles.section}><Text style={styles.sectionTitle}>Accessibility</Text><SettingRow label="Accessibility hints" description="Include extra spoken guidance on interactive controls." value={preferences.accessibilityHints} onValueChange={(value) => updatePreferences({ accessibilityHints: value })} /><Pressable accessibilityRole="button" accessibilityLabel="VoiceOver instructions" onPress={() => Alert.alert('VoiceOver is controlled by iOS', 'Open iPhone Settings > Accessibility > VoiceOver to turn VoiceOver on or off. Fade Society provides labels and hints for supported controls.')} style={styles.infoRow}><View style={styles.infoCopy}><Text style={styles.rowTitle}>VoiceOver</Text><Text style={styles.rowDescription}>VoiceOver is controlled by your iPhone settings.</Text></View><Text style={styles.link}>Instructions</Text></Pressable></View>
-    <View style={styles.section}><Text style={styles.sectionTitle}>Demo account</Text><Text style={styles.demoText}>Role previews are kept here so the customer profile stays focused on the current user.</Text><View style={styles.roles}>{roles.map((option) => <Pressable key={option} accessibilityRole="button" accessibilityState={{ selected: role === option }} onPress={() => setRole(option)} style={[styles.role, role === option && styles.roleActive]}><Text style={[styles.roleText, role === option && styles.roleTextActive]}>{option}</Text></Pressable>)}</View></View>
   </ScrollView></SafeAreaView>;
 }
 

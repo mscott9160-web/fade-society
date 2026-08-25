@@ -3,16 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View, useColorScheme } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/theme';
-
-const tabs = [
-  { href: '/', label: 'Home' },
-  { href: '/find', label: 'Explore' },
-  { href: '/bookings', label: 'Bookings' },
-  { href: '/calendar', label: 'Calendar' },
-  { href: '/messages', label: 'Messages' },
-  { href: '/profile', label: 'Profile' },
-  { href: '/settings', label: 'Settings' },
-] as const;
+import { customerTabs } from './customer-tabs';
 
 // Web has no native tab bar, so this renders any matched route via Slot
 // instead of a separate isolated tab navigator that could swallow pushes.
@@ -28,7 +19,7 @@ export default function AppTabs() {
       </View>
       <SafeAreaView edges={['bottom']} style={[styles.tabBar, { backgroundColor: colors.background, borderTopColor: colors.backgroundElement }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabRow}>
-          {tabs.map((tab) => {
+          {customerTabs.map((tab) => {
             const active = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);
             return (
               <Link key={tab.href} href={tab.href} asChild>
