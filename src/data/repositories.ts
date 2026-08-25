@@ -21,6 +21,7 @@ export type CreateBookingInput = {
 
 export type BookingRepository = {
   listMine: (userId: string) => Promise<Booking[]>;
+  getById?: (userId: string, bookingId: string) => Promise<Booking>;
   create: (userId: string, input: CreateBookingInput, idempotencyKey: string) => Promise<Booking>;
   reschedule: (userId: string, bookingId: string, startsAt: string) => Promise<Booking>;
   cancel: (userId: string, bookingId: string) => Promise<Booking>;

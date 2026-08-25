@@ -1,19 +1,21 @@
 import React from 'react';
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-
-const barbers = [
-  { id: 'marcus-j', name: 'Marcus J.', studio: 'Northline Studio', specialty: 'Premium fades', rating: '4.9' },
-  { id: 'andre-m', name: 'Andre M.', studio: 'The Blade Room', specialty: 'Beard sculpting', rating: '4.8' },
-  { id: 'jamal-r', name: 'Jamal R.', studio: 'Crown & Co.', specialty: 'Modern taper', rating: '5.0' },
-];
+import { getDataMode } from '@/data/supabase-client';
+import { barbers as localBarbers, studios as localStudios } from '@/domain/catalog';
+import { useAppStore } from '@/state/app-store';
 
 export default function ExploreScreen() {
   const router = useRouter();
+  const { barbers, studios, catalogLoading, catalogError, refreshCatalog } = useAppStore();
+  const visibleBarbers = getDataMode() === 'supabase' ? barbers : localBarbers;
+  const visibleStudios = getDataMode() === 'supabase' ? studios : localStudios;
+  if (catalogLoading) return <SafeAreaView style={styles.safeArea}><View style={styles.container}><Text style={styles.title}>Loading barbers...</Text></View></SafeAreaView>;
+  if (catalogError) return <SafeAreaView style={styles.safeArea}><View style={styles.container}><Text accessibilityRole="alert" style={styles.title}>Barbers could not be loaded</Text><Text style={styles.subtitle}>{catalogError}</Text><Pressable accessibilityRole="button" onPress={() => void refreshCatalog()} style={styles.barberButton}><Text style={styles.bookText}>Try again</Text></Pressable></View></SafeAreaView>;
   return <SafeAreaView style={styles.safeArea}><View style={styles.container}>
     <Text style={styles.title}>Find a barber</Text>
     <Text style={styles.subtitle}>Tap any barber to open the booking flow.</Text>
-    <View style={styles.list}>{barbers.map((barber) => <Pressable key={barber.id} accessibilityRole="button" accessibilityLabel={`Open ${barber.name} profile at ${barber.studio}`} onPress={() => router.push({ pathname: '/book', params: { barberId: barber.id } })} style={styles.barberButton}><View><Text style={styles.barberName}>{barber.name}</Text><Text style={styles.barberMeta}>{barber.studio}</Text><Text style={styles.barberDetail}>{barber.specialty} • {barber.rating} stars</Text></View><Text style={styles.bookText}>View & book</Text></Pressable>)}</View>
+    {visibleBarbers.length === 0 ? <Text style={styles.subtitle}>No barbers are available right now.</Text> : <View style={styles.list}>{visibleBarbers.map((barber) => { const studio = visibleStudios.find((item) => item.id === barber.studioId); return <Pressable key={barber.id} accessibilityRole="button" accessibilityLabel={`Open ${barber.name} profile at ${studio?.name ?? 'studio unavailable'}`} onPress={() => router.push({ pathname: '/book', params: { barberId: barber.id } })} style={styles.barberButton}><View><Text style={styles.barberName}>{barber.name}</Text><Text style={styles.barberMeta}>{studio?.name ?? 'Studio unavailable'}</Text><Text style={styles.barberDetail}>{barber.specialty} • {barber.rating ? `${barber.rating} stars` : 'Rating unavailable'}</Text></View><Text style={styles.bookText}>View & book</Text></Pressable>; })}</View>}
   </View></SafeAreaView>;
 }
 

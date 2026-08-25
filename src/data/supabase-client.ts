@@ -16,7 +16,7 @@ export function getSupabaseClientConfig(): SupabaseClientConfig | null {
 }
 
 export function getDataMode(): DataMode {
-  if (process.env.EXPO_PUBLIC_DATA_MODE === 'supabase' && getSupabaseClientConfig()) return 'supabase';
+  if (process.env.EXPO_PUBLIC_DATA_MODE === 'supabase') return 'supabase';
   return 'local';
 }
 

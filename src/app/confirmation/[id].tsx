@@ -4,15 +4,39 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatBookingDate } from '@/domain/date';
 import { useAppStore } from '@/state/app-store';
+import { getDataMode } from '@/data/supabase-client';
 
 export default function ConfirmationScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
-  const { bookings } = useAppStore();
-  const booking = bookings.find((item) => item.id === id);
+  const { bookings, hydrated, bookingLoading, bookingError, getBooking } = useAppStore();
+  const [loadedBooking, setLoadedBooking] = React.useState<typeof bookings[number] | null>(null);
+  const [lookupLoading, setLookupLoading] = React.useState(false);
+  const [lookupError, setLookupError] = React.useState<string | null>(null);
+  const booking = bookings.find((item) => item.id === id) ?? loadedBooking;
+
+  React.useEffect(() => {
+    if (!id || !hydrated || bookingLoading || booking || getDataMode() !== 'supabase') return;
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (active) setLookupLoading(true);
+      return getBooking(id);
+    }).then((nextBooking) => {
+      if (active) setLoadedBooking(nextBooking);
+    }).catch((error: unknown) => {
+      if (active) setLookupError(error instanceof Error ? error.message : String(error));
+    }).finally(() => {
+      if (active) setLookupLoading(false);
+    });
+    return () => { active = false; };
+  }, [booking, bookingLoading, getBooking, hydrated, id]);
+
+  if (!hydrated || bookingLoading || lookupLoading) {
+    return <SafeAreaView style={styles.safeArea}><View style={styles.container}><Text style={styles.title}>Loading booking...</Text></View></SafeAreaView>;
+  }
 
   if (!booking) {
-    return <SafeAreaView style={styles.safeArea}><View style={styles.container}><Text style={styles.title}>Booking not found</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/explore')} style={styles.primary}><Text style={styles.primaryText}>Find a barber</Text></Pressable></View></SafeAreaView>;
+    return <SafeAreaView style={styles.safeArea}><View style={styles.container}><Text accessibilityRole="alert" style={styles.title}>{bookingError || lookupError ? 'Booking could not be loaded' : 'Booking not found'}</Text><Text style={styles.detail}>{bookingError ?? lookupError ?? 'This booking is no longer available.'}</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/explore')} style={styles.primary}><Text style={styles.primaryText}>Find a barber</Text></Pressable></View></SafeAreaView>;
   }
 
   return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>

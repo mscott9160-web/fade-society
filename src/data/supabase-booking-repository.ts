@@ -94,6 +94,8 @@ export function createSupabaseBookingRepository(client?: BookingClient | null): 
       return (result.data ?? []).map(mapBooking);
     },
 
+    getById: async (_userId, bookingId) => hydrate(bookingId),
+
     create: async (_userId, input: CreateBookingInput, idempotencyKey) => {
       const result = await supabase().rpc<BookingRow>('create_booking', {
         p_service_id: input.serviceId,

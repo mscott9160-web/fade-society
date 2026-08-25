@@ -1,24 +1,46 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getBarberProfile, services } from '@/domain/catalog';
+import { getBarberProfile, services as localServices } from '@/domain/catalog';
 import { formatBookingDate, makeSlotDate } from '@/domain/date';
 import { useAppStore } from '@/state/app-store';
 import type { Service } from '@/domain/models';
+import { getDataMode } from '@/data/supabase-client';
 
 type Step = 'profile' | 'service' | 'time' | 'review';
 
 export default function BookScreen() {
 	const { barberId } = useLocalSearchParams<{ barberId?: string }>();
 	const router = useRouter();
-	const { bookings, addBooking } = useAppStore();
-	const profile = barberId ? getBarberProfile(barberId) : undefined;
+	const { bookings, addBooking, createBooking, listServices, listAvailability, barbers, studios, catalogLoading, catalogError } = useAppStore();
+	const live = getDataMode() === 'supabase';
+	const localProfile = barberId ? getBarberProfile(barberId) : undefined;
+	const liveBarber = barberId ? barbers.find((item) => item.id === barberId) : undefined;
+	const liveStudio = liveBarber ? studios.find((item) => item.id === liveBarber.studioId) : undefined;
+	const profile = live ? (liveBarber && liveStudio ? { barber: liveBarber, studio: liveStudio } : undefined) : localProfile;
 	const [step, setStep] = useState<Step>('profile');
 	const [selectedService, setSelectedService] = useState<Service | null>(null);
 	const [selectedTime, setSelectedTime] = useState('');
-	const times = useMemo(() => [9, 11, 13, 15, 17].flatMap((hour) => [0, 1].map((day) => makeSlotDate(day, hour))), []);
+	const [availableServices, setAvailableServices] = useState<Service[]>(live ? [] : localServices);
+	const [times, setTimes] = useState<string[]>(live ? [] : [9, 11, 13, 15, 17].flatMap((hour) => [0, 1].map((day) => makeSlotDate(day, hour))));
+	const [loading, setLoading] = useState(live);
+	const [error, setError] = useState<string | null>(null);
+	const [confirming, setConfirming] = useState(false);
+	const [idempotencyKey] = useState(() => `booking-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 	const reserved = new Set(bookings.filter((booking) => booking.barberId === barberId && booking.status !== 'cancelled').map((booking) => booking.startsAt));
+
+	useEffect(() => {
+		if (!live || !barberId) return;
+		let active = true;
+		const from = new Date().toISOString();
+		const to = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString();
+		Promise.all([listServices(barberId), listAvailability(barberId, from, to)])
+			.then(([nextServices, nextAvailability]) => { if (active) { setAvailableServices(nextServices); setTimes(nextAvailability.filter((slot) => slot.available).map((slot) => slot.startsAt)); } })
+			.catch((nextError: unknown) => { if (active) setError(nextError instanceof Error ? nextError.message : String(nextError)); })
+			.finally(() => { if (active) setLoading(false); });
+		return () => { active = false; };
+	}, [barberId, listAvailability, listServices, live]);
 
 	if (!profile) {
 		return <SafeAreaView style={styles.safeArea}><View style={styles.empty}><Text style={styles.title}>Barber profile unavailable</Text><Text style={styles.copy}>This studio could not be loaded. Return to Find and choose another profile.</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/explore')} style={styles.primary}><Text style={styles.primaryText}>Back to Find</Text></Pressable></View></SafeAreaView>;
@@ -31,22 +53,35 @@ export default function BookScreen() {
 		setStep('time');
 	}
 
-	function confirm() {
+	async function confirm() {
 		if (!selectedService || !selectedTime) return;
-		const id = addBooking({ serviceId: selectedService.id, serviceName: selectedService.name, barberId: currentProfile.barber.id, barberName: currentProfile.barber.name, studioId: currentProfile.studio.id, studioName: currentProfile.studio.name, startsAt: selectedTime, price: selectedService.price });
-		router.replace({ pathname: '/confirmation/[id]', params: { id } });
+		setConfirming(true);
+		setError(null);
+		try {
+			if (!live) {
+				const id = addBooking({ serviceId: selectedService.id, serviceName: selectedService.name, barberId: currentProfile.barber.id, barberName: currentProfile.barber.name, studioId: currentProfile.studio.id, studioName: currentProfile.studio.name, startsAt: selectedTime, price: selectedService.price });
+				router.replace({ pathname: '/confirmation/[id]', params: { id } });
+				return;
+			}
+			const booking = await createBooking({ serviceId: selectedService.id, barberId: currentProfile.barber.id, startsAt: selectedTime }, idempotencyKey);
+			router.replace({ pathname: '/confirmation/[id]', params: { id: booking.id } });
+		} catch (nextError) {
+			setError(nextError instanceof Error ? nextError.message : String(nextError));
+		} finally {
+			setConfirming(false);
+		}
 	}
 
 	return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>
 		<Pressable accessibilityRole="button" onPress={() => router.replace('/explore')} style={styles.back}><Text style={styles.link}>Back to Find</Text></Pressable>
 		<View style={styles.profile}><View style={styles.avatar} /><Text style={[styles.title, styles.profileTitle]}>{profile.barber.name}</Text><Text style={[styles.meta, styles.profileMeta]}>{profile.studio.name} • {profile.barber.rating.toFixed(1)} stars</Text><Text style={[styles.meta, styles.profileMeta]}>{profile.studio.address} • {profile.studio.distance}</Text><Text style={styles.specialty}>{profile.barber.specialty}</Text></View>
 
-		{step === 'profile' && <><Text style={styles.sectionTitle}>Services</Text>{services.map((service) => <Pressable key={service.id} accessibilityRole="button" accessibilityLabel={`Choose ${service.name}, ${service.durationMinutes} minutes, $${service.price}`} onPress={() => chooseService(service)} style={styles.row}><View><Text style={styles.rowTitle}>{service.name}</Text><Text style={styles.meta}>{service.durationMinutes} minutes</Text></View><Text style={styles.price}>${service.price}</Text></Pressable>)}</>}
+		{catalogLoading || loading ? <Text style={styles.copy}>Loading live services and availability...</Text> : error || catalogError ? <Text accessibilityRole="alert" style={styles.copy}>{error ?? catalogError}</Text> : <>{step === 'profile' && <><Text style={styles.sectionTitle}>Services</Text>{availableServices.length === 0 ? <Text style={styles.copy}>No services are available for this barber.</Text> : availableServices.map((service) => <Pressable key={service.id} accessibilityRole="button" accessibilityLabel={`Choose ${service.name}, ${service.durationMinutes} minutes, $${service.price}`} onPress={() => chooseService(service)} style={styles.row}><View><Text style={styles.rowTitle}>{service.name}</Text><Text style={styles.meta}>{service.durationMinutes} minutes</Text></View><Text style={styles.price}>${service.price}</Text></Pressable>)}</>}</>}
 		{step === 'service' && <Text style={styles.sectionTitle}>Choose a service</Text>}
-		{step === 'time' && <><Text style={styles.sectionTitle}>Choose a time</Text><Text style={styles.copy}>Select an available appointment for {selectedService?.name}.</Text><View style={styles.grid}>{times.map((time) => { const taken = reserved.has(time); return <Pressable key={time} disabled={taken} accessibilityRole="button" accessibilityState={{ selected: selectedTime === time, disabled: taken }} onPress={() => setSelectedTime(time)} style={[styles.timeButton, selectedTime === time && styles.active, taken && styles.taken]}><Text style={[styles.timeText, selectedTime === time && styles.activeText]}>{formatBookingDate(time)}{taken ? ' (Taken)' : ''}</Text></Pressable>; })}</View></>}
+		{step === 'time' && <><Text style={styles.sectionTitle}>Choose a time</Text><Text style={styles.copy}>Select an available appointment for {selectedService?.name}.</Text>{times.length === 0 ? <Text style={styles.copy}>No availability is currently listed.</Text> : <View style={styles.grid}>{times.map((time) => { const taken = !live && reserved.has(time); return <Pressable key={time} disabled={taken} accessibilityRole="button" accessibilityState={{ selected: selectedTime === time, disabled: taken }} onPress={() => setSelectedTime(time)} style={[styles.timeButton, selectedTime === time && styles.active, taken && styles.taken]}><Text style={[styles.timeText, selectedTime === time && styles.activeText]}>{formatBookingDate(time)}{taken ? ' (Taken)' : ''}</Text></Pressable>; })}</View>}</>}
 		{step === 'review' && selectedService && <View><Text style={styles.sectionTitle}>Review appointment</Text><View style={styles.review}><Text style={styles.rowTitle}>{selectedService.name}</Text><Text style={styles.meta}>{selectedService.durationMinutes} minutes</Text><Text style={styles.meta}>{formatBookingDate(selectedTime)}</Text><Text style={styles.meta}>{profile.studio.name} • {profile.studio.address}</Text><Text style={styles.price}>${selectedService.price}</Text><Text style={styles.policy}>Free cancellation up to 24 hours before your appointment.</Text></View></View>}
 
-		<View style={styles.actions}>{step === 'profile' ? null : <Pressable accessibilityRole="button" onPress={() => setStep(step === 'review' ? 'time' : step === 'time' ? 'profile' : 'profile')} style={styles.secondary}><Text style={styles.secondaryText}>Back</Text></Pressable>}{step === 'time' && <Pressable accessibilityRole="button" disabled={!selectedTime} onPress={() => setStep('review')} style={[styles.primary, !selectedTime && styles.disabled]}><Text style={styles.primaryText}>Review booking</Text></Pressable>}{step === 'review' && <Pressable accessibilityRole="button" onPress={confirm} style={styles.primary}><Text style={styles.primaryText}>Confirm request</Text></Pressable>}</View>
+		<View style={styles.actions}>{step === 'profile' ? null : <Pressable accessibilityRole="button" onPress={() => setStep(step === 'review' ? 'time' : step === 'time' ? 'profile' : 'profile')} style={styles.secondary}><Text style={styles.secondaryText}>Back</Text></Pressable>}{step === 'time' && <Pressable accessibilityRole="button" disabled={!selectedTime} onPress={() => setStep('review')} style={[styles.primary, !selectedTime && styles.disabled]}><Text style={styles.primaryText}>Review booking</Text></Pressable>}{step === 'review' && <Pressable accessibilityRole="button" disabled={confirming} onPress={() => void confirm()} style={[styles.primary, confirming && styles.disabled]}><Text style={styles.primaryText}>{confirming ? 'Sending...' : 'Confirm request'}</Text></Pressable>}</View>
 	</ScrollView></SafeAreaView>;
 }
 
