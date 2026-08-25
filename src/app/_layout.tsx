@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
@@ -22,6 +23,9 @@ export default function TabLayout() {
 
 function ThemedApp({ colorScheme }: { colorScheme: ReturnType<typeof useColorScheme> }) {
   const { preferences, authBootstrapState, authError, retryAuthBootstrap } = useAppStore();
+  useEffect(() => {
+    void SplashScreen.hideAsync();
+  }, []);
   const app = <ThemeProvider value={preferences.darkMode || colorScheme === 'dark' ? DarkTheme : DefaultTheme}><DemoStatusBanner /><AnimatedSplashOverlay /><AppTabs /></ThemeProvider>;
   if (getDataMode() === 'local') return app;
   if (authBootstrapState === 'loading') return <ThemeProvider value={DefaultTheme}><View style={styles.state}><ActivityIndicator accessibilityLabel="Loading account" size="large" color="#8A6A3A" /><Text style={styles.stateTitle}>Loading your account</Text></View></ThemeProvider>;
