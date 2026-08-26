@@ -28,7 +28,7 @@ export function isRole(value: unknown): value is Role {
 }
 
 export function isBookingStatus(value: unknown): value is BookingStatus {
-  return value === 'pending' || value === 'confirmed' || value === 'declined' || value === 'failed' || value === 'cancelled' || value === 'completed';
+  return value === 'pending' || value === 'confirmed' || value === 'declined' || value === 'failed' || value === 'cancelled' || value === 'completed' || value === 'no_show';
 }
 
 export function validatePersistedState(value: unknown): PersistedState | null {

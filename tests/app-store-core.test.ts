@@ -23,4 +23,10 @@ describe('booking store core', () => {
     expect(validatePersistedState({ version: 1, role: 'not-a-role', bookings: [] })).toBeNull();
     expect(validatePersistedState({ version: 1, role: 'customer', bookings: [{}] })).toEqual({ version: 1, role: 'customer', bookings: [], messages: [], preferences: { darkMode: false, largeText: false, accessibilityHints: true } });
   });
+
+  it('persists a no-show booking status', () => {
+    const booking = { ...seedBookings[0], status: 'no_show' };
+    const state = validatePersistedState({ version: 1, role: 'customer', bookings: [booking] });
+    expect(state?.bookings[0].status).toBe('no_show');
+  });
 });

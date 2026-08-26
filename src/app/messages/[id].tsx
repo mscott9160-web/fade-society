@@ -4,18 +4,21 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '@/state/app-store';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
+import { getDataMode } from '@/data/supabase-client';
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
   const { messages, sendMessage, markMessagesRead } = useAppStore();
   const theme = useCustomerTheme();
+  const live = getDataMode() === 'supabase';
   const [draft, setDraft] = useState('');
   const thread = messages.filter((message) => message.participantId === id);
   const participant = thread[0]?.participantName || 'Studio';
   React.useEffect(() => { if (id) markMessagesRead(id); }, [id, markMessagesRead]);
 
   function submit() {
+    if (live) return;
     const body = draft.trim();
     if (!body || !id) return;
     sendMessage({ participantId: id, participantName: participant, body });

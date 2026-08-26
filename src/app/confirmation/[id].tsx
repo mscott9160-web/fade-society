@@ -6,6 +6,7 @@ import { formatBookingDate } from '@/domain/date';
 import { useAppStore } from '@/state/app-store';
 import { getDataMode } from '@/data/supabase-client';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
+import { presentBookingStatus } from '@/domain/booking-status';
 
 export default function ConfirmationScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -17,6 +18,7 @@ export default function ConfirmationScreen() {
   const [lookupLoading, setLookupLoading] = React.useState(false);
   const [lookupError, setLookupError] = React.useState<string | null>(null);
   const booking = bookings.find((item) => item.id === id) ?? loadedBooking;
+  const status = booking ? presentBookingStatus(booking.status) : null;
 
   React.useEffect(() => {
     if (!id || !hydrated || bookingLoading || booking || getDataMode() !== 'supabase') return;
@@ -39,13 +41,13 @@ export default function ConfirmationScreen() {
   }
 
   if (!booking) {
-    return <SafeAreaView style={styles.safeArea}><View style={styles.container}><Text accessibilityRole="alert" style={styles.title}>{bookingError || lookupError ? 'Booking could not be loaded' : 'Booking not found'}</Text><Text style={styles.detail}>{bookingError ?? lookupError ?? 'This booking is no longer available.'}</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/explore')} style={styles.primary}><Text style={styles.primaryText}>Find a barber</Text></Pressable></View></SafeAreaView>;
+    return <SafeAreaView style={styles.safeArea}><View style={styles.container}><Text accessibilityRole="alert" style={styles.title}>{bookingError || lookupError ? 'Booking could not be loaded' : 'Booking not found'}</Text><Text style={styles.detail}>{bookingError ?? lookupError ?? 'This booking is no longer available.'}</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/find')} style={styles.primary}><Text style={styles.primaryText}>Find a barber</Text></Pressable></View></SafeAreaView>;
   }
 
   return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>
-    <View accessibilityRole="summary" style={styles.success}><Text accessibilityLabel="Success" style={styles.check}>✓</Text><Text style={styles.successTitle}>Request sent</Text><Text style={styles.successCopy}>Your appointment request is saved. The studio will confirm availability before it becomes final.</Text></View>
-    <View accessibilityLabel={`Booking confirmation ${booking.confirmationCode}`} style={styles.card}><Text style={styles.label}>Confirmation</Text><Text style={styles.code}>{booking.confirmationCode}</Text><Text style={styles.service}>{booking.serviceName}</Text><Text style={styles.detail}>{booking.barberName} • {booking.studioName}</Text><Text style={styles.detail}>{formatBookingDate(booking.startsAt)}</Text><Text style={styles.detail}>{booking.studioName}</Text><Text style={styles.detail}>Price: ${booking.price}</Text><Text style={styles.policy}>Cancellation policy: {booking.cancellationPolicy}</Text></View>
-    <View style={styles.actions}><Pressable accessibilityRole="button" accessibilityLabel="View my bookings" accessibilityHint="Opens your bookings" onPress={() => router.replace('/bookings')} style={styles.primary}><Text style={styles.primaryText}>View my bookings</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Contact studio" accessibilityHint="Opens messages" onPress={() => router.replace('/messages')} style={styles.secondary}><Text style={styles.secondaryText}>Contact studio</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Find another barber" accessibilityHint="Opens barber search" onPress={() => router.replace('/explore')} style={styles.secondary}><Text style={styles.secondaryText}>Find another barber</Text></Pressable></View>
+    <View accessibilityRole="summary" style={styles.success}><Text accessibilityLabel="Booking status" style={styles.check}>{status?.label}</Text><Text style={styles.successTitle}>{status?.label === 'Pending' ? 'Request received' : status?.label}</Text><Text style={styles.successCopy}>{status?.explanation}</Text></View>
+    <View accessibilityLabel={`Booking reference ${booking.confirmationCode}`} style={styles.card}><Text style={styles.label}>Booking reference</Text><Text style={styles.code}>{booking.confirmationCode}</Text><Text style={styles.service}>{booking.serviceName}</Text><Text style={styles.detail}>{booking.barberName} / {booking.studioName}</Text><Text style={styles.detail}>{formatBookingDate(booking.startsAt)}</Text><Text style={styles.detail}>{booking.studioName}</Text><Text style={styles.detail}>Price: ${booking.price}</Text><Text style={styles.policy}>Cancellation policy: {booking.cancellationPolicy}</Text></View>
+    <View style={styles.actions}><Pressable accessibilityRole="button" accessibilityLabel="View my bookings" accessibilityHint="Opens your bookings" onPress={() => router.replace('/bookings')} style={styles.primary}><Text style={styles.primaryText}>View my bookings</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Contact studio" accessibilityHint="Opens messages" onPress={() => router.replace('/messages')} style={styles.secondary}><Text style={styles.secondaryText}>Contact studio</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Find another barber" accessibilityHint="Opens barber search" onPress={() => router.replace('/find')} style={styles.secondary}><Text style={styles.secondaryText}>Find another barber</Text></Pressable></View>
   </ScrollView></SafeAreaView>;
 }
 
