@@ -35,8 +35,10 @@ type AppStore = {
   restoreBooking: (id: string) => void;
   completeBooking: (id: string) => void;
   resetDemoData: () => void;
-  sendMessage: (message: Omit<Message, 'id' | 'sentAt' | 'unread'>) => void;
-  markMessagesRead: (participantId: string) => void;
+  messageLoading: boolean;
+  messageError: string | null;
+  sendMessage: (message: Omit<Message, 'id' | 'sentAt' | 'unread'>) => Promise<void>;
+  markMessagesRead: (participantId: string) => Promise<void>;
   clearPersistenceError: () => void;
   updatePreferences: (changes: Partial<UserPreferences>) => void;
   signIn: (credentials: AuthCredentials) => Promise<AuthResult>;
@@ -76,6 +78,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(() => getDataMode() === 'supabase');
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [messageLoading, setMessageLoading] = useState(() => getDataMode() === 'supabase');
+  const [messageError, setMessageError] = useState<string | null>(null);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [authBootstrapState, setAuthBootstrapState] = useState<AppStore['authBootstrapState']>(() => getDataMode() === 'local' ? 'unauthenticated' : 'loading');
   const [authError, setAuthError] = useState<string | null>(null);
@@ -195,6 +199,19 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       }
     };
     void loadCatalog();
+    return () => { active = false; };
+  }, [authBootstrapState, currentUser]);
+
+  useEffect(() => {
+    if (getDataMode() !== 'supabase' || !currentUser) return;
+    let active = true;
+    setMessageLoading(true);
+    setMessageError(null);
+    createSupabaseRepositories().message.listThreads(currentUser.id).then((nextMessages) => {
+      if (active) setMessages(nextMessages);
+    }).catch((error) => {
+      if (active) setMessageError(error instanceof Error ? error.message : String(error));
+    }).finally(() => { if (active) setMessageLoading(false); });
     return () => { active = false; };
   }, [authBootstrapState, currentUser]);
 
@@ -320,8 +337,20 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       setPreferences(defaultPreferences);
       setPersistenceError(null);
     },
-    sendMessage: (message) => setMessages((current) => appendMessage(current, message)),
-    markMessagesRead: (participantId) => setMessages((current) => markMessagesRead(current, participantId)),
+    messageLoading,
+    messageError,
+    sendMessage: async (message) => {
+      if (getDataMode() === 'local') { setMessages((current) => appendMessage(current, message)); return; }
+      if (!currentUser) throw new Error('Sign in to send a message');
+      const sent = await createSupabaseRepositories().message.send(currentUser.id, message.participantId, message.body, `message-${Date.now()}`);
+      setMessages((current) => [...current, sent]);
+    },
+    markMessagesRead: async (participantId) => {
+      if (getDataMode() === 'local') { setMessages((current) => markMessagesRead(current, participantId)); return; }
+      if (!currentUser) return;
+      await createSupabaseRepositories().message.markRead(currentUser.id, participantId);
+      setMessages((current) => markMessagesRead(current, participantId));
+    },
     clearPersistenceError: () => setPersistenceError(null),
     updatePreferences: (changes) => setPreferences((current) => ({ ...current, ...changes })),
     signIn: async (credentials) => {
@@ -372,7 +401,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
     },
-  }), [authBootstrapState, authError, barbers, bookings, bookingError, bookingLoading, catalogError, catalogLoading, currentUser, hydrated, listAvailability, listServices, messages, persistenceError, preferences, role, studios]);
+  }), [authBootstrapState, authError, barbers, bookings, bookingError, bookingLoading, catalogError, catalogLoading, currentUser, hydrated, listAvailability, listServices, messageError, messageLoading, messages, persistenceError, preferences, role, studios]);
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>;
 }
