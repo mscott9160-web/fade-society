@@ -1,6 +1,10 @@
 # Fade Society
 
-Fade Society is a mobile-first barber discovery and booking experience built with Expo, React Native, TypeScript, and Expo Router.
+> Mobile-first barber discovery and booking for customers, barbers, studio owners, and platform administrators.
+
+Fade Society is a cross-platform product prototype built with Expo, React Native, TypeScript, and Expo Router. It demonstrates a complete customer booking journey while laying out the architecture for a multi-role marketplace.
+
+This project demonstrates product thinking as well as implementation: typed domain models, booking state transitions, local double-booking protection, accessibility-aware UI, a Supabase schema, and a clear path from demo state to server-authoritative operations.
 
 The project demonstrates a complete customer booking journey while laying out the architecture for a multi-role marketplace serving customers, barbers, studio owners, and platform administrators.
 
@@ -34,6 +38,10 @@ The local demo intentionally does not process real payments or use a live bookin
 - ESLint and TypeScript quality gates
 - Supabase/PostgreSQL schema and transactional booking RPC scaffold
 - EAS development build configuration for iOS
+
+## Why it exists
+
+Independent barbers and studios need a focused way to present services, availability, and conversations without forcing customers through a generic scheduling flow. Fade Society explores that experience from discovery through confirmation, while keeping marketplace roles and operational concerns visible in the architecture.
 
 ## Architecture
 
@@ -106,6 +114,10 @@ The next production milestones are:
 4. Add payments, notifications, support operations, monitoring, and release automation.
 
 See [docs/production-roadmap.md](docs/production-roadmap.md) for the full release plan.
+
+## Portfolio context
+
+Built by [Myles B. Scott](https://github.com/mscott9160-web) as an end-to-end product and mobile engineering project. The repository is intentionally transparent about what is implemented in the demo and what still needs production infrastructure, payments, monitoring, and real-device validation.
 
 ## License
 
