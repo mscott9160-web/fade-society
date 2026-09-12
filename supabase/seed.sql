@@ -66,10 +66,10 @@ begin
 
   insert into public.availability_slots (id, barber_id, starts_at, ends_at, available)
   values
-    ('30000000-0000-4000-8000-000000000001', provider_id, '2026-09-01 15:00:00+00', '2026-09-01 15:45:00+00', true),
-    ('30000000-0000-4000-8000-000000000002', provider_id, '2026-09-01 16:00:00+00', '2026-09-01 16:45:00+00', true),
-    ('30000000-0000-4000-8000-000000000003', provider_id, '2026-09-03 15:00:00+00', '2026-09-03 15:45:00+00', true),
-    ('30000000-0000-4000-8000-000000000004', provider_id, '2026-09-03 16:00:00+00', '2026-09-03 16:45:00+00', true)
+    ('30000000-0000-4000-8000-000000000001', provider_id, date_trunc('day', now()) + interval '1 day' + time '15:00', date_trunc('day', now()) + interval '1 day' + time '15:45', true),
+    ('30000000-0000-4000-8000-000000000002', provider_id, date_trunc('day', now()) + interval '1 day' + time '16:00', date_trunc('day', now()) + interval '1 day' + time '16:45', true),
+    ('30000000-0000-4000-8000-000000000003', provider_id, date_trunc('day', now()) + interval '3 days' + time '15:00', date_trunc('day', now()) + interval '3 days' + time '15:45', true),
+    ('30000000-0000-4000-8000-000000000004', provider_id, date_trunc('day', now()) + interval '3 days' + time '16:00', date_trunc('day', now()) + interval '3 days' + time '16:45', true)
   on conflict (id) do update set
     barber_id = excluded.barber_id,
     starts_at = excluded.starts_at,
