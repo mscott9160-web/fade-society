@@ -5,6 +5,7 @@ import { getSupabaseClient } from './supabase-client';
 const UNSUPPORTED_RESCHEDULE = 'Booking rescheduling is not supported by the backend';
 const UNSUPPORTED_CANCEL = 'Booking cancellation is not supported by the backend';
 const UNAVAILABLE = 'Unavailable';
+const BOOKING_TIMEOUT_MS = 15000;
 const BOOKING_SELECT = 'id, service_id, barber_id, studio_id, starts_at, price_cents, status, services(name), barbers(users(display_name)), studios(name)';
 
 type BookingRow = {
@@ -37,8 +38,18 @@ function requireClient(client: BookingClient | null): BookingClient {
   return client;
 }
 
-function throwIfError(error: Error | null): void {
-  if (error) throw error;
+function throwIfError(error: unknown): void {
+  if (!error) return;
+  if (error instanceof Error) throw error;
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') throw new Error(error.message);
+  throw new Error('The booking service returned an unknown error');
+}
+
+async function withTimeout<T>(request: PromiseLike<T>): Promise<T> {
+  return Promise.race([
+    Promise.resolve(request),
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error('The booking service took too long to respond. Please try again.')), BOOKING_TIMEOUT_MS)),
+  ]);
 }
 
 function first<Row>(value: Row | Row[] | null): Row | null {
@@ -82,7 +93,7 @@ export function createSupabaseBookingRepository(client?: BookingClient | null): 
   const supabase = () => requireClient(configuredClient);
 
   const hydrate = async (bookingId: string): Promise<Booking> => {
-    const result = await supabase().from<BookingRow>('bookings').select(BOOKING_SELECT).eq('id', bookingId).limit(1);
+    const result = await withTimeout(supabase().from<BookingRow>('bookings').select(BOOKING_SELECT).eq('id', bookingId).limit(1));
     throwIfError(result.error);
     return mapBooking(requireSingle(result.data, 'Created booking could not be read'));
   };
@@ -97,12 +108,12 @@ export function createSupabaseBookingRepository(client?: BookingClient | null): 
     getById: async (_userId, bookingId) => hydrate(bookingId),
 
     create: async (_userId, input: CreateBookingInput, idempotencyKey) => {
-      const result = await supabase().rpc<BookingRow>('create_booking', {
+      const result = await withTimeout(supabase().rpc<BookingRow>('create_booking', {
         p_service_id: input.serviceId,
         p_barber_id: input.barberId,
         p_starts_at: input.startsAt,
         p_idempotency_key: idempotencyKey,
-      });
+      }));
       throwIfError(result.error);
       const row = requireSingle(result.data, 'Create booking RPC returned no booking');
       return hydrate(row.id);

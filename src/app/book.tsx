@@ -11,6 +11,12 @@ import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 type Step = 'profile' | 'service' | 'time' | 'review';
 
+function getErrorMessage(error: unknown): string {
+	if (error instanceof Error) return error.message;
+	if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') return error.message;
+	return 'The booking service returned an unknown error. Please try again.';
+}
+
 export default function BookScreen() {
 	const { barberId } = useLocalSearchParams<{ barberId?: string }>();
 	const router = useRouter();
@@ -40,7 +46,7 @@ export default function BookScreen() {
 		const to = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString();
 		Promise.all([listServices(barberId), listAvailability(barberId, from, to)])
 			.then(([nextServices, nextAvailability]) => { if (active) { setAvailableServices(nextServices); setTimes(nextAvailability.filter((slot) => slot.available).map((slot) => slot.startsAt)); } })
-			.catch((nextError: unknown) => { if (active) setError(nextError instanceof Error ? nextError.message : String(nextError)); })
+			.catch((nextError: unknown) => { if (active) setError(getErrorMessage(nextError)); })
 			.finally(() => { if (active) setLoading(false); });
 		return () => { active = false; };
 	}, [barberId, listAvailability, listServices, live]);
@@ -70,7 +76,7 @@ export default function BookScreen() {
 			const booking = await createBooking({ serviceId: selectedService.id, barberId: currentProfile.barber.id, startsAt: selectedTime }, idempotencyKey);
 			router.replace({ pathname: '/confirmation/[id]', params: { id: booking.id } });
 		} catch (nextError) {
-			setError(nextError instanceof Error ? nextError.message : String(nextError));
+			setError(getErrorMessage(nextError));
 		} finally {
 			setConfirming(false);
 		}
