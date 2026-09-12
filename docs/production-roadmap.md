@@ -2,7 +2,7 @@
 
 Status: Internal demo, not approved for public launch
 Owner: Aurora Labs product team
-Last updated: 2026-08-16
+Last updated: 2026-09-12
 
 ## Release Gates
 
@@ -55,7 +55,7 @@ Goal: Make one customer booking journey clear and trustworthy before backend wor
 - [x] Add loading and persistence recovery states to the primary flow.
 - [x] Make Messages a usable booking-linked conversation flow.
 - [x] Add customer support and report-problem entry points.
-- [ ] Add accessibility audit for VoiceOver, TalkBack, Dynamic Type, and contrast.
+- [ ] Add accessibility audit for VoiceOver, TalkBack, Dynamic Type, and contrast. Tracked as FS-009 in [docs/team-backlog.md](team-backlog.md).
 
 Exit criteria: a first-time customer completes the flow in under 90 seconds without facilitator help.
 
@@ -69,21 +69,22 @@ Goal: Establish server authority and real account identity.
 - [x] Add the initial Supabase schema and server authorization scaffold.
 - [x] Add the transactional booking RPC scaffold and booking rules contract.
 - [x] Define typed repository boundaries for catalog, bookings, messages, and sessions.
-- [ ] Implement users, studios, barbers, services, availability, bookings, messages.
-- [ ] Implement secure authentication, sessions, recovery, and account deletion.
-- [ ] Enforce role and studio authorization server-side.
-- [ ] Add repository adapters and replace local demo repository behind a feature flag.
-- [ ] Add integration, authorization, migration, and concurrency tests.
+- [x] Implement users, studios, barbers, services, availability, bookings, messages for the current customer/provider slice.
+- [ ] Implement secure authentication, sessions, recovery, and account deletion. Sign-in, sign-up, and sign-out are present; recovery and deletion remain.
+- [x] Enforce role and studio authorization server-side for booking review and messaging access.
+- [x] Add repository adapters and replace local demo repository behind a feature flag for the current catalog, booking, message, and session slice.
+- [ ] Add integration, authorization, migration, and concurrency tests. Tracked as FS-011 in [docs/team-backlog.md](team-backlog.md).
 
 Exit criteria: two devices see the same booking state and unauthorized mutations are rejected.
 
 ### Phase 4: Provider and Owner Operations
-Status: Planned
+Status: In progress
 
 Goal: Deliver concrete value to the supply side.
 
-- [ ] Barber Today view with accept/decline/complete actions.
-- [ ] Availability editor with working hours, breaks, blackout dates, and buffers.
+- [x] Barber Today view with accept/decline actions.
+- [ ] Complete and no-show actions. Tracked as FS-006 in [docs/team-backlog.md](team-backlog.md).
+- [ ] Availability editor with working hours, breaks, blackout dates, and buffers. Tracked as FS-007 in [docs/team-backlog.md](team-backlog.md).
 - [ ] Client and appointment details.
 - [ ] Owner studio overview, team, chairs, utilization, cancellations, and reports.
 - [ ] Provider onboarding and business verification workflow.
@@ -121,6 +122,8 @@ Goal: Operate the application safely at pilot scale and release gradually.
 Exit criteria: closed beta completes without unresolved P0/P1 issues and launch metrics meet the approved thresholds.
 
 ## Current Non-Goals
+
+The executable story backlog is tracked in [docs/team-backlog.md](team-backlog.md). Sprint 1 starts with role-aware navigation, booking status feedback, Today card hierarchy, and booking-linked messaging polish.
 
 - Do not add more social-feed breadth before booking and provider operations are reliable.
 - Do not treat client-controlled demo roles as authorization.
