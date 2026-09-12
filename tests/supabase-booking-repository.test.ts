@@ -27,7 +27,7 @@ function makeClient(rows: unknown[], rpcRows: unknown[] | null = [], rpcError: E
 
 const bookingRow = {
   id: 'booking-1', service_id: 'service-1', barber_id: 'barber-1', studio_id: 'studio-1',
-  starts_at: '2026-08-24T10:00:00Z', price_cents: 4250, status: 'no_show',
+  starts_at: '2026-08-24T10:00:00Z', price_cents: 4250, status: 'no_show', confirmation_code: 'FS-BOOKING1',
   services: { name: 'Skin fade' }, barbers: { users: { display_name: 'Morgan' } }, studios: { name: 'Northline' },
 };
 
@@ -36,10 +36,10 @@ describe('Supabase booking repository', () => {
     const { client, calls } = makeClient([bookingRow]);
     await expect(createSupabaseBookingRepository(client).listMine('caller-id')).resolves.toEqual([{
       id: 'booking-1', customerName: 'Unavailable', serviceId: 'service-1', serviceName: 'Skin fade', barberId: 'barber-1', barberName: 'Morgan',
-      studioId: 'studio-1', studioName: 'Northline', startsAt: '2026-08-24T10:00:00Z', confirmationCode: 'Unavailable',
+      studioId: 'studio-1', studioName: 'Northline', startsAt: '2026-08-24T10:00:00Z', confirmationCode: 'FS-BOOKING1',
       status: 'no_show', price: 42.5, cancellationPolicy: 'Unavailable',
     }]);
-    expect(calls).toContainEqual({ method: 'select', args: ['id, customer_id, service_id, barber_id, studio_id, starts_at, price_cents, status, services(name), customer:users!bookings_customer_id_fkey(display_name), barbers(users(display_name)), studios(name)'] });
+    expect(calls).toContainEqual({ method: 'select', args: ['id, customer_id, service_id, barber_id, studio_id, starts_at, price_cents, status, confirmation_code, services(name), customer:users!bookings_customer_id_fkey(display_name), barbers(users(display_name)), studios(name)'] });
     expect(calls).not.toContainEqual({ method: 'eq', args: ['customer_id', 'caller-id'] });
   });
 

@@ -116,7 +116,7 @@ Implementation note: Today now has scoped refresh, last-updated feedback, counts
 
 - Owner: Frontend / UX
 - Priority: P1
-- Status: In progress
+- Status: Complete
 - Depends on: BP-001, BP-004
 
 As a barber, I want authorized customer and service context so that I can prepare for the appointment without exposing unrelated personal data.
@@ -129,11 +129,13 @@ Acceptance criteria:
 - Missing service/customer data has explicit loading/error/fallback states.
 - Customer contact data is limited to booking context.
 
+Implementation note: provider details now expose confirmation code, appointment time, explicit service-loading errors, and booking-context messaging. Migration `0019_booking_confirmation_codes.sql` makes confirmation references server-owned and available to provider reads.
+
 ### BP-007: Schedule-Based Availability
 
 - Owner: Backend / Frontend
 - Priority: P1
-- Status: Planned
+- Status: In progress
 - Depends on: BP-002, BP-003
 
 As a barber, I want schedule-oriented availability management so that I do not type every slot manually.

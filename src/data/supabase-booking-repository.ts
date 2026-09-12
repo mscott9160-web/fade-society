@@ -4,7 +4,7 @@ import { getSupabaseClient } from './supabase-client';
 
 const UNAVAILABLE = 'Unavailable';
 const BOOKING_TIMEOUT_MS = 15000;
-const BOOKING_SELECT = 'id, customer_id, service_id, barber_id, studio_id, starts_at, price_cents, status, services(name), customer:users!bookings_customer_id_fkey(display_name), barbers(users(display_name)), studios(name)';
+const BOOKING_SELECT = 'id, customer_id, service_id, barber_id, studio_id, starts_at, price_cents, status, confirmation_code, services(name), customer:users!bookings_customer_id_fkey(display_name), barbers(users(display_name)), studios(name)';
 
 type BookingRow = {
   id: string;
@@ -15,6 +15,7 @@ type BookingRow = {
   starts_at: string;
   price_cents: number;
   status: string;
+  confirmation_code: string;
   services: { name: string } | { name: string }[] | null;
   customer: { display_name: string } | { display_name: string }[] | null;
   barbers: { users: { display_name: string } | { display_name: string }[] | null } | { users: { display_name: string } | { display_name: string }[] | null }[] | null;
@@ -84,7 +85,7 @@ function mapBooking(row: BookingRow): Booking {
     studioId: row.studio_id,
     studioName: studio?.name ?? UNAVAILABLE,
     startsAt: row.starts_at,
-    confirmationCode: UNAVAILABLE,
+    confirmationCode: row.confirmation_code,
     status: row.status as BookingStatus,
     price: row.price_cents / 100,
     cancellationPolicy: UNAVAILABLE,

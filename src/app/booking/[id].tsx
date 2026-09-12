@@ -18,6 +18,8 @@ export default function ProviderBookingDetailsScreen() {
   const { role, bookings, messages, listServices, updateBookingStatus } = useAppStore();
   const booking = bookings.find((item) => item.id === id);
   const [duration, setDuration] = useState<number | null>(null);
+  const [serviceLoading, setServiceLoading] = useState(false);
+  const [serviceError, setServiceError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -25,10 +27,23 @@ export default function ProviderBookingDetailsScreen() {
   useEffect(() => {
     if (!booking) return;
     let active = true;
-    void listServices(booking.barberId).then((services) => {
+    void Promise.resolve().then(() => {
+      if (!active) return [];
+      setServiceLoading(true);
+      setServiceError(null);
+      return listServices(booking.barberId);
+    }).then((services) => {
       const service = services.find((item) => item.id === booking.serviceId);
-      if (active) setDuration(service?.durationMinutes ?? null);
-    }).catch(() => undefined);
+      if (!active) return;
+      setDuration(service?.durationMinutes ?? null);
+      setServiceError(service ? null : 'Service details are unavailable for this appointment.');
+    }).catch(() => {
+      if (!active) return;
+      setDuration(null);
+      setServiceError('Service details could not be loaded.');
+    }).finally(() => {
+      if (active) setServiceLoading(false);
+    });
     return () => { active = false; };
   }, [booking, listServices]);
 
@@ -58,12 +73,13 @@ export default function ProviderBookingDetailsScreen() {
   return <SafeAreaView style={styles.safeArea}><ScrollView contentContainerStyle={styles.container}>
     <Pressable accessibilityRole="button" accessibilityLabel="Back to Today" onPress={() => router.back()} style={styles.back}><Text style={styles.backText}>Back to Today</Text></Pressable>
     <Text style={styles.eyebrow}>Appointment details</Text><Text accessibilityRole="header" style={styles.title}>{booking.customerName ?? 'Customer'}</Text><Text style={styles.subtitle}>{formatBookingDate(booking.startsAt)}</Text>
-    <View style={styles.card}><Detail label="Service" value={booking.serviceName} styles={styles} /><Detail label="Duration" value={duration === null ? 'Loading service details...' : `${duration} minutes`} styles={styles} /><Detail label="Price" value={`$${booking.price}`} styles={styles} /><Detail label="Studio" value={booking.studioName} styles={styles} /><Detail label="Status" value={status.label} styles={styles} statusColor={theme.statusColors[status.tone]} /></View>
+    <View style={styles.card}><Detail label="Confirmation code" value={booking.confirmationCode} styles={styles} /><Detail label="Service" value={booking.serviceName} styles={styles} /><Detail label="Duration" value={serviceLoading ? 'Loading service details...' : duration === null ? 'Unavailable' : `${duration} minutes`} styles={styles} /><Detail label="Price" value={`$${booking.price}`} styles={styles} /><Detail label="Appointment time" value={formatBookingDate(booking.startsAt)} styles={styles} /><Detail label="Studio" value={booking.studioName} styles={styles} /><Detail label="Status" value={status.label} styles={styles} statusColor={theme.statusColors[status.tone]} /></View>
+    {serviceError && <Text accessibilityRole="alert" style={styles.error}>{serviceError}</Text>}
     {(actionError || actionMessage) && <Text accessibilityRole="alert" style={actionError ? styles.error : styles.success}>{actionError ?? actionMessage}</Text>}
     {booking.status === 'pending' && <View style={styles.actions}><Pressable accessibilityRole="button" accessibilityLabel="Confirm appointment" accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => updateStatus('confirmed')} style={styles.confirm}><Text style={styles.confirmText}>{updating ? 'Submitting...' : 'Confirm'}</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Decline appointment" accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => updateStatus('declined')} style={styles.decline}><Text style={styles.declineText}>{updating ? 'Submitting...' : 'Decline'}</Text></Pressable></View>}
     {booking.status === 'confirmed' && <View style={styles.actions}><Pressable accessibilityRole="button" accessibilityLabel="Mark appointment completed" accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => updateStatus('completed')} style={styles.confirm}><Text style={styles.confirmText}>{updating ? 'Submitting...' : 'Complete'}</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Mark appointment no-show" accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => updateStatus('no_show')} style={styles.decline}><Text style={styles.declineText}>{updating ? 'Submitting...' : 'No-show'}</Text></Pressable></View>}
     {['declined', 'completed', 'cancelled', 'no_show'].includes(booking.status) && <Text style={styles.readOnly}>Read-only appointment: {status.explanation}</Text>}
-    {conversation ? <Pressable accessibilityRole="button" accessibilityLabel={`Open conversation with ${conversation.participantName}`} accessibilityHint="Opens the authorized booking conversation" onPress={() => router.push({ pathname: '/messages/[id]', params: { id: conversation.participantId, bookingId: booking.id } })} style={styles.conversation}><Text style={styles.conversationTitle}>Booking conversation</Text><Text style={styles.conversationText}>Message {conversation.participantName}</Text></Pressable> : <View style={styles.emptyCard}><Text style={styles.cardTitle}>No conversation available</Text><Text style={styles.copy}>The authorized booking conversation will appear here when available.</Text></View>}
+    {conversation ? <Pressable accessibilityRole="button" accessibilityLabel={`Message customer ${conversation.participantName}`} accessibilityHint="Opens the authorized booking conversation" onPress={() => router.push({ pathname: '/messages/[id]', params: { id: conversation.participantId, conversationId: conversation.conversationId, bookingId: booking.id } })} style={styles.conversation}><Text style={styles.conversationTitle}>Booking conversation</Text><Text style={styles.conversationText}>Message {conversation.participantName}</Text></Pressable> : <View style={styles.emptyCard}><Text style={styles.cardTitle}>Conversation context unavailable</Text><Text style={styles.copy}>The authorized booking conversation could not be loaded. Customer contact details are not shown here.</Text></View>}
   </ScrollView></SafeAreaView>;
 }
 
