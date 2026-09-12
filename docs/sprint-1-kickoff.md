@@ -75,7 +75,8 @@ Progress: source-level fixes and the audit matrix are complete. Physical iPhone/
 
 ## Next Ready Stories
 
-- FS-011: Authorization And Concurrency Test Matrix
+- FS-005: Provider Appointment Details
+- FS-011: Authorization And Concurrency Test Matrix (local coverage complete; live checks pending)
 
 ## Coordination Risks
 

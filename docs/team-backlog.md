@@ -211,7 +211,7 @@ Sprint goal: add the safeguards needed before payments or a closed beta.
 
 - Owner: QA / Backend
 - Priority: P0
-- Status: Ready
+- Status: Complete with live validation pending
 - Depends on: FS-004, FS-006, FS-007
 
 As the team, we want executable authorization and concurrency checks so that backend behavior is trustworthy.
@@ -224,6 +224,8 @@ Acceptance criteria:
 - Duplicate booking and message retries are tested.
 - Two attempts to reserve one slot result in one successful booking.
 - Migration status and rollback/recovery notes are documented.
+
+Implementation note: local coverage now includes 68 tests across 12 files, including booking transition, message retry forwarding, and SQL contract invariants. Live multi-user authorization/concurrency checks remain documented in [docs/fs-011-authorization-concurrency-checks.md](fs-011-authorization-concurrency-checks.md) and require a disposable Supabase environment.
 
 ### FS-012: Observability And Support Baseline
 

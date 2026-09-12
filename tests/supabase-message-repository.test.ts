@@ -22,6 +22,17 @@ describe('Supabase message repository', () => {
     expect(mocked.calls).toEqual([['send_message', { p_participant_id: 'barber-1', p_body: 'Hello', p_idempotency_key: 'key-1' }]]);
   });
 
+  it('forwards distinct retry keys without inventing local deduplication', async () => {
+    const mocked = client([{ ...row, unread: false }]);
+    const repository = createSupabaseMessageRepository(mocked.value);
+    await repository.send('user-1', 'barber-1', 'Hello', 'retry-1');
+    await repository.send('user-1', 'barber-1', 'Hello', 'retry-2');
+    expect(mocked.calls).toEqual([
+      ['send_message', { p_participant_id: 'barber-1', p_body: 'Hello', p_idempotency_key: 'retry-1' }],
+      ['send_message', { p_participant_id: 'barber-1', p_body: 'Hello', p_idempotency_key: 'retry-2' }],
+    ]);
+  });
+
   it('marks a conversation read and propagates backend errors', async () => {
     const mocked = client([]);
     await expect(createSupabaseMessageRepository(mocked.value).markRead('user-1', 'barber-1')).resolves.toBeUndefined();
