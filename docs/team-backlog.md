@@ -162,7 +162,7 @@ Sprint goal: make failure and accessibility states as reliable as the happy path
 
 - Owner: Backend / Frontend
 - Priority: P1
-- Status: Planned
+- Status: Complete
 - Depends on: FS-006, FS-007
 
 As a customer, I want to cancel or reschedule within policy so that I can recover from schedule changes.
@@ -173,6 +173,8 @@ Acceptance criteria:
 - A cancelled slot is not silently reopened unless policy allows it.
 - Rescheduling is atomic and idempotent.
 - Provider and customer receive the same resulting status.
+
+Implementation note: migration `0015_customer_booking_changes.sql` is live. Customer actions use atomic server RPCs with the documented 24-hour cutoff; live rescheduling uses the barber's available slots.
 
 ### FS-009: Accessibility Audit
 
@@ -197,7 +199,7 @@ Progress note: static fixes and audit report are complete in [docs/accessibility
 
 - Owner: Frontend / QA
 - Priority: P1
-- Status: Planned
+- Status: In progress
 - Depends on: FS-002, FS-004
 
 As a user, I want errors to explain what happened and what I can do next.

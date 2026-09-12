@@ -64,4 +64,18 @@ describe('Supabase authorization and concurrency migration contracts', () => {
     expect(sql).toContain('timestamptz');
     expect(sql).toContain('revoke all on function');
   });
+
+  it('keeps customer booking changes owned, policy-bound, audited, and slot-safe', () => {
+    const sql = migration('0015_customer_booking_changes.sql');
+    expect(sql).toContain('create or replace function public.cancel_my_booking');
+    expect(sql).toContain('create or replace function public.reschedule_my_booking');
+    expect(sql).toContain('target_booking.customer_id <> current_user_id');
+    expect(sql).toContain("target_booking.status not in ('pending', 'confirmed')");
+    expect(sql).toContain("interval '24 hours'");
+    expect(sql).toContain('for update');
+    expect(sql).toContain('update public.availability_slots set available = true');
+    expect(sql).toContain('booking_cancelled');
+    expect(sql).toContain('booking_rescheduled');
+    expect(sql).toContain('revoke all on function');
+  });
 });

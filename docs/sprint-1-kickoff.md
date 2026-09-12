@@ -91,6 +91,20 @@ Status: Complete
 
 Outcome: authorized providers can select a barber, list the next 14 days, add future slots, and remove only unbooked future slots through migration `0014`. Recurring hours, breaks, blackout dates, and buffers remain future scope.
 
+### FS-008: Customer Cancellation And Reschedule
+
+Owner: Backend / Frontend
+Status: Complete
+
+Outcome: live customer cancellation and rescheduling use migration `0015`, enforce the 24-hour policy server-side, and use real barber availability for rescheduling.
+
+### FS-010: Error And Recovery Consistency
+
+Owner: Frontend / QA
+Status: In progress
+
+Focus: remove remaining raw error rendering, standardize retry behavior, and make auth/session failures recover cleanly.
+
 ## Next Ready Stories
 
 - FS-005: Provider Appointment Details

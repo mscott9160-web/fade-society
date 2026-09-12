@@ -77,10 +77,14 @@ describe('Supabase booking repository', () => {
     await expect(createSupabaseBookingRepository(client).listMine('u')).rejects.toThrow('Invalid booking status: bogus');
   });
 
-  it('rejects unsupported mutations and missing configuration', async () => {
-    const repository = createSupabaseBookingRepository(null);
-    await expect(repository.reschedule('u', 'b', 't')).rejects.toThrow('not supported by the backend');
-    await expect(repository.cancel('u', 'b')).rejects.toThrow('not supported by the backend');
-    await expect(repository.listMine('u')).rejects.toThrow('Supabase is not configured');
+  it('calls customer booking change RPCs and rejects missing configuration', async () => {
+    const { client, calls } = makeClient([bookingRow], [{ id: 'booking-1' }]);
+    const repository = createSupabaseBookingRepository(client);
+    await repository.cancel('u', 'booking-1');
+    await repository.reschedule('u', 'booking-1', '2026-08-25T10:00:00Z');
+    expect(calls).toContainEqual({ method: 'rpc', args: ['cancel_my_booking', { p_booking_id: 'booking-1' }] });
+    expect(calls).toContainEqual({ method: 'rpc', args: ['reschedule_my_booking', { p_booking_id: 'booking-1', p_starts_at: '2026-08-25T10:00:00Z' }] });
+    const missingRepository = createSupabaseBookingRepository(null);
+    await expect(missingRepository.listMine('u')).rejects.toThrow('Supabase is not configured');
   });
 });

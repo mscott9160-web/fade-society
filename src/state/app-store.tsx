@@ -33,8 +33,8 @@ type AppStore = {
   addProviderSlot: (barberId: string, startsAt: string, endsAt: string) => Promise<ProviderAvailabilitySlot>;
   removeProviderSlot: (slotId: string) => Promise<ProviderAvailabilitySlot>;
   refreshCatalog: () => Promise<void>;
-  rescheduleBooking: (id: string, startsAt: string) => void;
-  cancelBooking: (id: string) => void;
+  rescheduleBooking: (id: string, startsAt: string) => Promise<void>;
+  cancelBooking: (id: string) => Promise<void>;
   restoreBooking: (id: string) => void;
   completeBooking: (id: string) => void;
   updateBookingStatus: (id: string, status: 'confirmed' | 'declined' | 'completed' | 'no_show') => Promise<void>;
@@ -353,8 +353,18 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         setCatalogLoading(false);
       }
     },
-    rescheduleBooking: (id, startsAt) => { if (getDataMode() === 'local') setBookings((current) => updateBookingTime(current, id, startsAt)); },
-    cancelBooking: (id) => { if (getDataMode() === 'local') setBookings((current) => updateBookingStatus(current, id, 'cancelled')); },
+    rescheduleBooking: async (id, startsAt) => {
+      if (getDataMode() === 'local') { setBookings((current) => updateBookingTime(current, id, startsAt)); return; }
+      if (!currentUser) throw new Error('Sign in to reschedule an appointment');
+      const booking = await createSupabaseRepositories().booking.reschedule(currentUser.id, id, startsAt);
+      setBookings((current) => [...current.filter((item) => item.id !== booking.id), booking]);
+    },
+    cancelBooking: async (id) => {
+      if (getDataMode() === 'local') { setBookings((current) => updateBookingStatus(current, id, 'cancelled')); return; }
+      if (!currentUser) throw new Error('Sign in to cancel an appointment');
+      const booking = await createSupabaseRepositories().booking.cancel(currentUser.id, id);
+      setBookings((current) => [...current.filter((item) => item.id !== booking.id), booking]);
+    },
     restoreBooking: (id) => { if (getDataMode() === 'local') setBookings((current) => updateBookingStatus(current, id, 'confirmed')); },
     completeBooking: (id) => { if (getDataMode() === 'local') setBookings((current) => updateBookingStatus(current, id, 'completed')); },
     resetDemoData: () => {

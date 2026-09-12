@@ -2,8 +2,6 @@ import type { Booking, BookingStatus } from '@/domain/models';
 import type { BookingRepository, CreateBookingInput } from './repositories';
 import { getSupabaseClient } from './supabase-client';
 
-const UNSUPPORTED_RESCHEDULE = 'Booking rescheduling is not supported by the backend';
-const UNSUPPORTED_CANCEL = 'Booking cancellation is not supported by the backend';
 const UNAVAILABLE = 'Unavailable';
 const BOOKING_TIMEOUT_MS = 15000;
 const BOOKING_SELECT = 'id, customer_id, service_id, barber_id, studio_id, starts_at, price_cents, status, services(name), customer:users!bookings_customer_id_fkey(display_name), barbers(users(display_name)), studios(name)';
@@ -139,7 +137,17 @@ export function createSupabaseBookingRepository(client?: BookingClient | null): 
       return hydrate(row.id);
     },
 
-    reschedule: async () => { throw new Error(UNSUPPORTED_RESCHEDULE); },
-    cancel: async () => { throw new Error(UNSUPPORTED_CANCEL); },
+    reschedule: async (_userId, bookingId, startsAt) => {
+      const result = await withTimeout(supabase().rpc<BookingRow>('reschedule_my_booking', { p_booking_id: bookingId, p_starts_at: startsAt }));
+      throwIfError(result.error);
+      const row = requireSingle(result.data, 'Reschedule returned no booking');
+      return hydrate(row.id);
+    },
+    cancel: async (_userId, bookingId) => {
+      const result = await withTimeout(supabase().rpc<BookingRow>('cancel_my_booking', { p_booking_id: bookingId }));
+      throwIfError(result.error);
+      const row = requireSingle(result.data, 'Cancellation returned no booking');
+      return hydrate(row.id);
+    },
   };
 }
