@@ -105,6 +105,12 @@ export function createSupabaseBookingRepository(client?: BookingClient | null): 
       return (result.data ?? []).map(mapBooking);
     },
 
+    listForProvider: async (_userId) => {
+      const result = await supabase().from<BookingRow>('bookings').select(BOOKING_SELECT);
+      throwIfError(result.error);
+      return (result.data ?? []).map(mapBooking);
+    },
+
     getById: async (_userId, bookingId) => hydrate(bookingId),
 
     create: async (_userId, input: CreateBookingInput, idempotencyKey) => {
@@ -116,6 +122,16 @@ export function createSupabaseBookingRepository(client?: BookingClient | null): 
       }));
       throwIfError(result.error);
       const row = requireSingle(result.data, 'Create booking RPC returned no booking');
+      return hydrate(row.id);
+    },
+
+    updateStatus: async (_userId, bookingId, status) => {
+      const result = await withTimeout(supabase().rpc<BookingRow>('update_booking_status', {
+        p_booking_id: bookingId,
+        p_status: status,
+      }));
+      throwIfError(result.error);
+      const row = requireSingle(result.data, 'Update booking status RPC returned no booking');
       return hydrate(row.id);
     },
 

@@ -34,6 +34,7 @@ type AppStore = {
   cancelBooking: (id: string) => void;
   restoreBooking: (id: string) => void;
   completeBooking: (id: string) => void;
+  updateBookingStatus: (id: string, status: 'confirmed' | 'declined') => Promise<void>;
   resetDemoData: () => void;
   messageLoading: boolean;
   messageError: string | null;
@@ -293,6 +294,15 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       const booking = await createSupabaseRepositories().booking.create(currentUser.id, input, idempotencyKey);
       setBookings((current) => [...current.filter((item) => item.id !== booking.id), booking]);
       return booking;
+    },
+    updateBookingStatus: async (id, status) => {
+      if (getDataMode() === 'local') {
+        setBookings((current) => updateBookingStatus(current, id, status));
+        return;
+      }
+      if (!currentUser) throw new Error('Sign in to review bookings');
+      const booking = await createSupabaseRepositories().booking.updateStatus(currentUser.id, id, status);
+      setBookings((current) => [...current.filter((item) => item.id !== booking.id), booking]);
     },
     getBooking: async (id) => {
       if (getDataMode() === 'local') {

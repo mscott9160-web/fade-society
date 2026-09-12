@@ -4,12 +4,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { customerTabs } from './customer-tabs';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
+import { useAppStore } from '@/state/app-store';
 
 // Web has no native tab bar, so this renders any matched route via Slot
 // instead of a separate isolated tab navigator that could swallow pushes.
 export default function AppTabs() {
   const pathname = usePathname();
   const customerTheme = useCustomerTheme();
+  const { role } = useAppStore();
+  const providerMode = role === 'barber' || role === 'owner' || role === 'admin';
+  const tabs = providerMode ? ([{ href: '/today' as const, label: 'Today' }, ...customerTabs] as const) : customerTabs;
 
   return (
     <View style={styles.root}>
@@ -18,7 +22,7 @@ export default function AppTabs() {
       </View>
       <SafeAreaView edges={['bottom']} style={[styles.tabBar, { backgroundColor: customerTheme.surface, borderTopColor: customerTheme.border }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabRow}>
-          {customerTabs.map((tab) => {
+          {tabs.map((tab) => {
             const active = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);
             return (
               <Link key={tab.href} href={tab.href} asChild>
