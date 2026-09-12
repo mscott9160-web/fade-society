@@ -53,6 +53,42 @@ Create, in a disposable or explicitly test project:
 
 Do not share passwords in chat or commit them to the repository. Enter credentials directly into the app or Supabase dashboard.
 
+## Fixture Setup SQL
+
+After creating the additional Auth users manually in **Authentication > Users**, run this SQL in the Supabase SQL Editor. Replace the email values only if you used different test addresses. This changes application profiles and memberships; it does not create Auth users or passwords.
+
+```sql
+do $$
+declare
+	owner_id uuid;
+	admin_id uuid;
+begin
+	select id into owner_id from auth.users where email = 'owner.demo@example.com';
+	select id into admin_id from auth.users where email = 'admin.demo@example.com';
+
+	if owner_id is not null then
+		insert into public.users (id, display_name, role)
+		values (owner_id, 'Studio Owner Demo', 'owner')
+		on conflict (id) do update set display_name = excluded.display_name, role = excluded.role;
+		insert into public.studio_memberships (studio_id, user_id, membership_role, active)
+		values ('10000000-0000-4000-8000-000000000001', owner_id, 'owner', true)
+		on conflict (studio_id, user_id) do update set membership_role = excluded.membership_role, active = true;
+	end if;
+
+	if admin_id is not null then
+		insert into public.users (id, display_name, role)
+		values (admin_id, 'Platform Admin Demo', 'admin')
+		on conflict (id) do update set display_name = excluded.display_name, role = excluded.role;
+		insert into public.studio_memberships (studio_id, user_id, membership_role, active)
+		values ('10000000-0000-4000-8000-000000000001', admin_id, 'admin', true)
+		on conflict (studio_id, user_id) do update set membership_role = excluded.membership_role, active = true;
+	end if;
+end;
+$$;
+```
+
+The second-studio barber and unrelated customer require Auth users first. The second-studio barber also needs a seeded second studio barber record before cross-studio checks can run.
+
 ## Evidence To Record
 
 For each check, record account role, route, booking/slot/conversation ID, timestamp, expected result, actual result, and severity. Never record passwords, access tokens, anon keys, service-role keys, or database passwords.
