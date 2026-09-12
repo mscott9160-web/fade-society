@@ -7,6 +7,7 @@ import { useAppStore } from '@/state/app-store';
 import { getDataMode } from '@/data/supabase-client';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
 import { presentBookingStatus } from '@/domain/booking-status';
+import { getErrorMessage } from '@/domain/error';
 
 const CONFIRMATION_LOAD_TIMEOUT_MS = 15000;
 
@@ -38,7 +39,7 @@ export default function ConfirmationScreen() {
     }).then((nextBooking) => {
       if (active) setLoadedBooking(nextBooking);
     }).catch((error: unknown) => {
-      if (active) setLookupError(error instanceof Error ? error.message : String(error));
+      if (active) setLookupError(getErrorMessage(error));
     }).finally(() => {
       if (active) setLookupLoading(false);
     });
