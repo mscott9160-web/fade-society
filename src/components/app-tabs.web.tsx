@@ -13,7 +13,7 @@ export default function AppTabs() {
   const customerTheme = useCustomerTheme();
   const { role } = useAppStore();
   const providerMode = role === 'barber' || role === 'owner' || role === 'admin';
-  const tabs = providerMode ? ([{ href: '/today' as const, label: 'Today' }, ...customerTabs] as const) : customerTabs;
+  const tabs = providerMode ? ([{ href: '/today' as const, label: 'Today' }, { href: '/profile' as const, label: 'Profile' }] as const) : customerTabs;
 
   return (
     <View style={styles.root}>

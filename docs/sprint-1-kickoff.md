@@ -16,7 +16,7 @@ Sprint goal: Make the working customer/provider flow feel finished without chang
 ### FS-001: Role-Aware Navigation Polish
 
 Owner: Frontend / UX
-Status: In progress
+Status: Complete
 
 First checks:
 
@@ -27,15 +27,25 @@ First checks:
 - Sign out works on native and web.
 - No duplicate Explore/Find destination appears.
 
+Outcome: provider navigation is limited to Today and Profile; customer navigation remains unchanged; Settings now shows the current identity and role. Authenticated Supabase sign-out is available. Local demo sign-out remains intentionally sessionless.
+
 Handoff:
 
 - Frontend: inspect `src/components/app-tabs.tsx`, `src/components/app-tabs.web.tsx`, `src/app/settings.tsx`, and `src/components/customer-tabs.ts`.
 - UX: define the intended customer/provider tab hierarchy and states at narrow width and larger text.
 - QA: run the two-account manual path and record screenshots or reproduction notes for any overlap, clipping, or incorrect route visibility.
 
+## Next Active Story
+
+### FS-002: Booking Status Feedback
+
+Owner: Frontend / UX
+Status: In progress
+
+Focus: make Confirm, Decline, booking submission, and failure states visibly distinct and retryable without changing server rules.
+
 ## Next Ready Stories
 
-- FS-002: Booking Status Feedback
 - FS-003: Today Appointment Card Hierarchy
 - FS-004: Booking-Linked Messaging UX
 - FS-009: Accessibility Audit

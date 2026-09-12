@@ -22,7 +22,7 @@ Sprint goal: polish the customer/provider workflow without changing its working 
 
 - Owner: Frontend / UX
 - Priority: P0
-- Status: In progress
+- Status: Complete
 - Depends on: None
 
 As a signed-in user, I want navigation to reflect my role so that customer and provider jobs are easy to find.
@@ -36,11 +36,13 @@ Acceptance criteria:
 - No duplicate Explore/Find destinations appear.
 - TypeScript, lint, tests, and a web export pass.
 
+Implementation note: authenticated Supabase sign-out is complete. Local demo mode retains its intentional no-op sign-out behavior because it has no authenticated session.
+
 ### FS-002: Booking Status Feedback
 
 - Owner: Frontend / UX
 - Priority: P0
-- Status: Ready
+- Status: In progress
 - Depends on: FS-001
 
 As a customer or provider, I want clear feedback after a booking action so that I know whether the request succeeded, failed, or is still processing.
