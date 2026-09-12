@@ -42,12 +42,26 @@ Handoff:
 Owner: Frontend / UX
 Status: In progress
 
-Focus: make Confirm, Decline, booking submission, and failure states visibly distinct and retryable without changing server rules.
+Status: Complete
+
+Outcome: Confirm, Decline, booking submission, and failure states are visibly distinct, retryable, and bounded by timeouts without changing server rules.
+
+### FS-003: Today Appointment Card Hierarchy
+
+Owner: Frontend / UX
+Status: Complete
+
+Outcome: provider cards show customer identity, service, time, price, status explanation, and safe actions with wrapping for larger text. Migration `0012` is applied.
+
+### FS-004: Booking-Linked Messaging UX
+
+Owner: Frontend / Backend
+Status: In progress
+
+Focus: make the booking conversation visible, contextual, and easy to use from both customer and barber accounts.
 
 ## Next Ready Stories
 
-- FS-003: Today Appointment Card Hierarchy
-- FS-004: Booking-Linked Messaging UX
 - FS-009: Accessibility Audit
 - FS-011: Authorization And Concurrency Test Matrix
 

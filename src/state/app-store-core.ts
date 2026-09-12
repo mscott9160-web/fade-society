@@ -3,6 +3,7 @@ import type { Booking, BookingStatus, Message, PersistedState, Role, UserPrefere
 export const seedBookings: Booking[] = [
   {
     id: 'seed-1',
+    customerName: 'Jordan Lee',
     serviceId: 'classic-taper',
     serviceName: 'Classic taper',
     barberId: 'marcus-j',

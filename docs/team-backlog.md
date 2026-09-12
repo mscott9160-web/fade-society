@@ -59,7 +59,7 @@ Acceptance criteria:
 
 - Owner: Frontend / UX
 - Priority: P0
-- Status: Ready
+- Status: Complete
 - Depends on: FS-001
 
 As a barber, I want appointment cards to expose the important information first so that I can review requests quickly.
@@ -72,11 +72,13 @@ Acceptance criteria:
 - Long names and larger text wrap without overlap.
 - Empty, loading, and error states are intentionally designed.
 
+Implementation note: provider customer display-name access is enforced by migration `0012_provider_customer_profile_read_policy.sql`; older records use an intentional `Customer` fallback when no name is available.
+
 ### FS-004: Booking-Linked Messaging UX
 
 - Owner: Frontend / Backend
 - Priority: P0
-- Status: Ready
+- Status: In progress
 - Depends on: FS-001
 
 As a customer or barber, I want every booking to have a visible conversation so that I can contact the other participant without searching.

@@ -39,6 +39,7 @@ export type AvailabilitySlot = {
 
 export type Booking = {
   id: string;
+  customerName?: string;
   serviceId: string;
   serviceName: string;
   barberId: string;

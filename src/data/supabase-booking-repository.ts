@@ -6,10 +6,11 @@ const UNSUPPORTED_RESCHEDULE = 'Booking rescheduling is not supported by the bac
 const UNSUPPORTED_CANCEL = 'Booking cancellation is not supported by the backend';
 const UNAVAILABLE = 'Unavailable';
 const BOOKING_TIMEOUT_MS = 15000;
-const BOOKING_SELECT = 'id, service_id, barber_id, studio_id, starts_at, price_cents, status, services(name), barbers(users(display_name)), studios(name)';
+const BOOKING_SELECT = 'id, customer_id, service_id, barber_id, studio_id, starts_at, price_cents, status, services(name), customer:users!bookings_customer_id_fkey(display_name), barbers(users(display_name)), studios(name)';
 
 type BookingRow = {
   id: string;
+  customer_id: string;
   service_id: string;
   barber_id: string;
   studio_id: string;
@@ -17,6 +18,7 @@ type BookingRow = {
   price_cents: number;
   status: string;
   services: { name: string } | { name: string }[] | null;
+  customer: { display_name: string } | { display_name: string }[] | null;
   barbers: { users: { display_name: string } | { display_name: string }[] | null } | { users: { display_name: string } | { display_name: string }[] | null }[] | null;
   studios: { name: string } | { name: string }[] | null;
 };
@@ -58,6 +60,7 @@ function first<Row>(value: Row | Row[] | null): Row | null {
 
 function mapBooking(row: BookingRow): Booking {
   const service = first(row.services);
+  const customer = first(row.customer);
   const barber = first(row.barbers);
   const studio = first(row.studios);
   const user = first(barber?.users ?? null);
@@ -68,6 +71,7 @@ function mapBooking(row: BookingRow): Booking {
 
   return {
     id: row.id,
+    customerName: customer?.display_name ?? UNAVAILABLE,
     serviceId: row.service_id,
     serviceName: service?.name ?? UNAVAILABLE,
     barberId: row.barber_id,
