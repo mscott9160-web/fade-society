@@ -43,6 +43,26 @@ describe('Supabase booking repository', () => {
     expect(calls).not.toContainEqual({ method: 'eq', args: ['customer_id', 'caller-id'] });
   });
 
+  it('loads provider bookings only through the provider read RPC', async () => {
+    const { client, calls } = makeClient([], [{
+      ...bookingRow,
+      service_name: 'Skin fade', customer_name: 'Jordan Lee', barber_name: 'Morgan', studio_name: 'Northline',
+    }]);
+    await expect(createSupabaseBookingRepository(client).listForProvider('barber-id')).resolves.toMatchObject([{ id: 'booking-1', customerName: 'Jordan Lee' }]);
+    expect(calls).toContainEqual({ method: 'rpc', args: ['list_provider_bookings', {}] });
+    expect(client.from).not.toHaveBeenCalled();
+  });
+
+  it('loads provider booking detail only through the provider read RPC', async () => {
+    const { client, calls } = makeClient([], [{
+      ...bookingRow,
+      service_name: 'Skin fade', customer_name: 'Jordan Lee', barber_name: 'Morgan', studio_name: 'Northline',
+    }]);
+    await expect(createSupabaseBookingRepository(client).getForProvider?.('owner-id', 'booking-1')).resolves.toMatchObject({ id: 'booking-1' });
+    expect(calls).toContainEqual({ method: 'rpc', args: ['get_provider_booking', { p_booking_id: 'booking-1' }] });
+    expect(client.from).not.toHaveBeenCalled();
+  });
+
   it('passes the exact create_booking args and hydrates the setof row', async () => {
     const { client, calls } = makeClient([bookingRow], [{ id: 'booking-1' }]);
     await expect(createSupabaseBookingRepository(client).create('caller-id', {

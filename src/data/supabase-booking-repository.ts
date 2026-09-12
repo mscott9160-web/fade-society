@@ -21,6 +21,13 @@ type BookingRow = {
   studios: { name: string } | { name: string }[] | null;
 };
 
+type ProviderBookingRow = Omit<BookingRow, 'services' | 'customer' | 'barbers' | 'studios'> & {
+  service_name: string | null;
+  customer_name: string | null;
+  barber_name: string | null;
+  studio_name: string | null;
+};
+
 type QueryResult<Row> = { data: Row[] | null; error: Error | null };
 type BookingQuery<Row> = PromiseLike<QueryResult<Row>> & {
   select: (columns: string) => BookingQuery<Row>;
@@ -84,6 +91,16 @@ function mapBooking(row: BookingRow): Booking {
   };
 }
 
+function mapProviderBooking(row: ProviderBookingRow): Booking {
+  return mapBooking({
+    ...row,
+    services: row.service_name ? { name: row.service_name } : null,
+    customer: row.customer_name ? { display_name: row.customer_name } : null,
+    barbers: row.barber_name ? { users: { display_name: row.barber_name } } : null,
+    studios: row.studio_name ? { name: row.studio_name } : null,
+  });
+}
+
 function requireSingle<Row>(rows: Row[] | null, message: string): Row {
   if (!rows || rows.length === 0) throw new Error(message);
   if (rows.length > 1) throw new Error('Supabase returned multiple booking rows');
@@ -108,12 +125,18 @@ export function createSupabaseBookingRepository(client?: BookingClient | null): 
     },
 
     listForProvider: async (_userId) => {
-      const result = await supabase().from<BookingRow>('bookings').select(BOOKING_SELECT);
+      const result = await withTimeout(supabase().rpc<ProviderBookingRow>('list_provider_bookings', {}));
       throwIfError(result.error);
-      return (result.data ?? []).map(mapBooking);
+      return (result.data ?? []).map(mapProviderBooking);
     },
 
     getById: async (_userId, bookingId) => hydrate(bookingId),
+
+    getForProvider: async (_userId, bookingId) => {
+      const result = await withTimeout(supabase().rpc<ProviderBookingRow>('get_provider_booking', { p_booking_id: bookingId }));
+      throwIfError(result.error);
+      return mapProviderBooking(requireSingle(result.data, 'Booking not found'));
+    },
 
     create: async (_userId, input: CreateBookingInput, idempotencyKey) => {
       const result = await withTimeout(supabase().rpc<BookingRow>('create_booking', {

@@ -244,7 +244,10 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       setBookingLoading(true);
       setBookingError(null);
       try {
-        const nextBookings = await createSupabaseRepositories().booking.listMine(currentUser.id);
+        const bookingRepository = createSupabaseRepositories().booking;
+        const nextBookings = role === 'customer'
+          ? await bookingRepository.listMine(currentUser.id)
+          : await bookingRepository.listForProvider(currentUser.id);
         if (!active) return;
         setBookings(nextBookings);
       } catch (error) {
@@ -258,7 +261,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     };
     void loadBookings();
     return () => { active = false; };
-  }, [authBootstrapState, currentUser]);
+  }, [authBootstrapState, currentUser, role]);
 
   useEffect(() => {
     if (!hydrated || getDataMode() !== 'local') return;
@@ -336,8 +339,16 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       }
       if (!currentUser) throw new Error('Sign in to view this booking');
       const repository = createSupabaseRepositories().booking;
-      if (!repository.getById) throw new Error('Booking lookup is not supported by the backend');
-      const booking = await repository.getById(currentUser.id, id);
+      if (role === 'customer') {
+        if (!repository.getById) throw new Error('Booking lookup is not supported by the backend');
+      } else if (!repository.getForProvider) {
+        throw new Error('Provider booking lookup is not supported by the backend');
+      }
+      const getCustomerBooking = repository.getById;
+      const getProviderBooking = repository.getForProvider;
+      const booking = role === 'customer'
+        ? await getCustomerBooking!(currentUser.id, id)
+        : await getProviderBooking!(currentUser.id, id);
       setBookings((current) => [...current.filter((item) => item.id !== booking.id), booking]);
       return booking;
     },

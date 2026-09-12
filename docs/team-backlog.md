@@ -36,7 +36,7 @@ Implementation note: provider navigation now exposes Today, Messages, and Profil
 
 - Owner: Backend / Architecture
 - Priority: P0
-- Status: Planned
+- Status: Complete
 - Depends on: BP-001
 
 As a provider, I want booking reads to match my authorized barber/studio scope so that the UI never relies on broad table reads or stale client role assumptions.
@@ -50,11 +50,13 @@ Acceptance criteria:
 - Customer booking reads remain separate from provider reads.
 - Scope is deterministic, ordered, and refreshable.
 
+Implementation note: migration `0016_provider_booking_read_model.sql` provides explicit provider list/detail RPCs. Barber scope is assigned-booking only; owner/admin scope requires active studio membership. Platform-wide admin scope remains intentionally disabled.
+
 ### BP-003: Safe Provider Status Transitions
 
 - Owner: Backend / QA
 - Priority: P0
-- Status: Planned
+- Status: In progress
 - Depends on: BP-002
 
 As a provider, I want status actions to be safe when retried or used concurrently so that a network failure cannot create contradictory appointment state.

@@ -78,4 +78,17 @@ describe('Supabase authorization and concurrency migration contracts', () => {
     expect(sql).toContain('booking_rescheduled');
     expect(sql).toContain('revoke all on function');
   });
+
+  it('defines explicit provider-scoped booking read RPCs and active membership checks', () => {
+    const sql = migration('0016_provider_booking_read_model.sql');
+    expect(sql).toContain('add column if not exists active boolean not null default true');
+    expect(sql).toContain('create or replace function public.list_provider_bookings()');
+    expect(sql).toContain('create or replace function public.get_provider_booking');
+    expect(sql).toContain("actor.role = 'barber' and booking.barber_id = auth.uid()");
+    expect(sql).toContain("actor.role in ('owner', 'admin')");
+    expect(sql).toContain('membership.active');
+    expect(sql).toContain("membership.membership_role in ('owner', 'admin')");
+    expect(sql).toContain('revoke all on function public.list_provider_bookings()');
+    expect(sql).toContain('grant execute on function public.get_provider_booking(uuid) to authenticated');
+  });
 });
