@@ -5,13 +5,20 @@ import { getSupabaseClient } from './supabase-client';
 type MessageRow = { id: string; participant_id: string; participant_name: string; body: string; created_at: string; unread: boolean };
 export type MessageClient = { rpc: <Row>(name: string, args: Record<string, unknown>) => PromiseLike<{ data: Row[] | null; error: Error | null }> };
 
+function throwIfError(error: unknown): void {
+  if (!error) return;
+  if (error instanceof Error) throw error;
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') throw new Error(error.message);
+  throw new Error('The messaging service returned an unknown error');
+}
+
 export function createSupabaseMessageRepository(client?: MessageClient | null): MessageRepository {
   const supabase = client === undefined ? getSupabaseClient() as unknown as MessageClient | null : client;
     function requireClient(client: MessageClient | null): MessageClient {
       if (!client) throw new Error('Supabase is not configured');
       return client;
     }
-  const call = async (request: PromiseLike<{ data: MessageRow[] | null; error: Error | null }>) => { const result = await request; if (result.error) throw result.error; return result.data ?? []; };
+  const call = async (request: PromiseLike<{ data: MessageRow[] | null; error: Error | null }>) => { const result = await request; throwIfError(result.error); return result.data ?? []; };
   const api = () => requireClient(supabase);
   const map = (row: MessageRow): Message => ({ id: row.id, participantId: row.participant_id, participantName: row.participant_name, body: row.body, sentAt: row.created_at, unread: row.unread });
   return {
