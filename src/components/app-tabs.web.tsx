@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { customerTabs } from './customer-tabs';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
 import { useAppStore } from '@/state/app-store';
+import stylesWeb from './app-tabs.web.module.css';
 
 // Web has no native tab bar, so this renders any matched route via Slot
 // instead of a separate isolated tab navigator that could swallow pushes.
@@ -26,7 +27,7 @@ export default function AppTabs() {
             const active = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);
             return (
               <Link key={tab.href} href={tab.href} asChild>
-                <Pressable accessibilityRole="button" accessibilityLabel={tab.label} accessibilityState={{ selected: active }} style={styles.tabButton}>
+                <Pressable accessibilityRole="button" accessibilityLabel={tab.label} accessibilityState={{ selected: active }} className={stylesWeb.tabButton} style={styles.tabButton}>
                   <Text style={[styles.tabText, { color: customerTheme.secondaryText, fontSize: 14 * customerTheme.textScale }, active && { color: customerTheme.text, fontWeight: '800' }]}>{tab.label}</Text>
                 </Pressable>
               </Link>

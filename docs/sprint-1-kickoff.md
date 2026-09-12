@@ -71,6 +71,8 @@ Status: In progress
 
 Focus: verify the working customer/provider flow at larger text, VoiceOver, contrast, and web keyboard boundaries.
 
+Progress: source-level fixes and the audit matrix are complete. Physical iPhone/Android and browser interaction checks remain the only blocker to closing this story.
+
 ## Next Ready Stories
 
 - FS-011: Authorization And Concurrency Test Matrix

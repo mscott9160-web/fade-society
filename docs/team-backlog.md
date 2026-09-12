@@ -185,6 +185,8 @@ Acceptance criteria:
 - TalkBack/web keyboard gaps are documented or fixed.
 - Findings are recorded with severity and reproduction steps.
 
+Progress note: static fixes and audit report are complete in [docs/accessibility-audit.md](accessibility-audit.md). Story remains open until VoiceOver/TalkBack, browser keyboard, and contrast checks are performed on target devices.
+
 ### FS-010: Error And Recovery Consistency
 
 - Owner: Frontend / QA

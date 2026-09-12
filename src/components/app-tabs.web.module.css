@@ -1,0 +1,5 @@
+.tabButton:focus-visible {
+  outline: 3px solid #8a6a3a;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
