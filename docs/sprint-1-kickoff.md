@@ -58,11 +58,21 @@ Outcome: provider cards show customer identity, service, time, price, status exp
 Owner: Frontend / Backend
 Status: In progress
 
-Focus: make the booking conversation visible, contextual, and easy to use from both customer and barber accounts.
+Status: Complete
+
+Outcome: booking threads show participant and service context, empty threads are visible, and customer/barber send/read states are explicit. Full message history remains a separate backend gap.
+
+## Next Active Story
+
+### FS-009: Accessibility Audit
+
+Owner: QA / UX
+Status: In progress
+
+Focus: verify the working customer/provider flow at larger text, VoiceOver, contrast, and web keyboard boundaries.
 
 ## Next Ready Stories
 
-- FS-009: Accessibility Audit
 - FS-011: Authorization And Concurrency Test Matrix
 
 ## Coordination Risks

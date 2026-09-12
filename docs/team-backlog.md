@@ -78,7 +78,7 @@ Implementation note: provider customer display-name access is enforced by migrat
 
 - Owner: Frontend / Backend
 - Priority: P0
-- Status: In progress
+- Status: Complete
 - Depends on: FS-001
 
 As a customer or barber, I want every booking to have a visible conversation so that I can contact the other participant without searching.
@@ -91,6 +91,8 @@ Acceptance criteria:
 - Read state updates for the active participant.
 - Empty, loading, send-failure, and unauthorized states are readable.
 - Repeating a send request with the same idempotency key does not duplicate a message.
+
+Implementation note: the current list RPC exposes one latest row per conversation; full message history remains a separate backend story. Empty booking-linked threads are visible before the first message.
 
 ## Sprint 2: Make Provider Operations Dependable
 
@@ -170,7 +172,7 @@ Acceptance criteria:
 
 - Owner: QA / UX
 - Priority: P1
-- Status: Ready
+- Status: In progress
 - Depends on: FS-001, FS-002, FS-003
 
 As a customer using assistive technology, I want the primary journey to remain understandable and operable.
