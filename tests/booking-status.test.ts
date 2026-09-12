@@ -24,7 +24,7 @@ describe('booking status presenter', () => {
 
 describe('local booking status transitions', () => {
   it.each([
-    ['pending', 'completed'], ['pending', 'no_show'], ['confirmed', 'declined'],
+    ['pending', 'completed'], ['pending', 'no_show'], ['confirmed', 'declined'], ['completed', 'no_show'],
     ['confirmed', 'failed'], ['declined', 'confirmed'], ['failed', 'confirmed'],
     ['completed', 'cancelled'], ['no_show', 'confirmed'],
   ] as const)('rejects %s -> %s', (from, to) => {
@@ -33,7 +33,7 @@ describe('local booking status transitions', () => {
   });
 
   it.each([
-    ['pending', 'confirmed'], ['pending', 'declined'], ['pending', 'cancelled'], ['confirmed', 'completed'],
+    ['pending', 'confirmed'], ['pending', 'declined'], ['pending', 'cancelled'], ['confirmed', 'completed'], ['confirmed', 'no_show'],
     ['confirmed', 'cancelled'], ['cancelled', 'confirmed'],
   ] as const)('allows %s -> %s', (from, to) => {
     const result = updateBookingStatus([{ ...booking, status: from }], booking.id, to);

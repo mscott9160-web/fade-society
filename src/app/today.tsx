@@ -20,7 +20,7 @@ export default function TodayScreen() {
   const pending = useMemo(() => bookings.filter((booking) => booking.status === 'pending').sort((left, right) => left.startsAt.localeCompare(right.startsAt)), [bookings]);
   const upcoming = useMemo(() => bookings.filter((booking) => booking.status === 'confirmed').sort((left, right) => left.startsAt.localeCompare(right.startsAt)), [bookings]);
 
-  async function review(id: string, status: 'confirmed' | 'declined') {
+  async function review(id: string, status: 'confirmed' | 'declined' | 'completed' | 'no_show') {
     setActionError(null);
     setActionMessage(null);
     setUpdatingId(id);
@@ -29,7 +29,7 @@ export default function TodayScreen() {
         updateBookingStatus(id, status),
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error('The booking update is taking too long. Please try again.')), STATUS_ACTION_TIMEOUT_MS)),
       ]);
-      setActionMessage(`Booking ${status === 'confirmed' ? 'confirmed' : 'declined'} successfully.`);
+      setActionMessage(`Booking ${status === 'confirmed' ? 'confirmed' : status === 'declined' ? 'declined' : status === 'completed' ? 'completed' : 'marked no-show'} successfully.`);
     } catch (error: unknown) {
       setActionError(error instanceof Error ? error.message : 'The booking could not be updated.');
     } finally {
@@ -52,16 +52,17 @@ export default function TodayScreen() {
   </ScrollView></SafeAreaView>;
 }
 
-function BookingCard({ booking, updating, onReview, onOpen, styles, statusColors }: { booking: ReturnType<typeof useAppStore>['bookings'][number]; updating: boolean; onReview: (id: string, status: 'confirmed' | 'declined') => void; onOpen: () => void; styles: ReturnType<typeof createStyles>; statusColors: ReturnType<typeof useCustomerTheme>['statusColors'] }) {
+function BookingCard({ booking, updating, onReview, onOpen, styles, statusColors }: { booking: ReturnType<typeof useAppStore>['bookings'][number]; updating: boolean; onReview: (id: string, status: 'confirmed' | 'declined' | 'completed' | 'no_show') => void; onOpen: () => void; styles: ReturnType<typeof createStyles>; statusColors: ReturnType<typeof useCustomerTheme>['statusColors'] }) {
   const presentation = presentBookingStatus(booking.status);
   const isPending = booking.status === 'pending';
+  const isConfirmed = booking.status === 'confirmed';
   return <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`Open details for ${booking.customerName ?? 'customer'}'s ${booking.serviceName} appointment`} accessibilityHint="Opens appointment details" style={styles.card}>
     <View style={styles.cardHeader}><View style={styles.identity}><Text style={styles.customer}>{booking.customerName ?? 'Customer'}</Text><Text style={styles.cardTitle}>{booking.serviceName}</Text></View><Text style={styles.price}>${booking.price}</Text></View>
     <Text style={styles.time}>{formatBookingDate(booking.startsAt)}</Text>
     <Text style={styles.detail}>{booking.barberName} / {booking.studioName}</Text>
     <Text style={[styles.status, { color: statusColors[presentation.tone] }]}>{presentation.label}</Text>
     <Text style={styles.statusExplanation}>{presentation.explanation}</Text>
-    {isPending ? <View style={styles.actions}><Pressable accessibilityRole="button" accessibilityLabel={`Confirm ${booking.customerName ?? 'customer'}'s ${booking.serviceName} appointment at ${formatBookingDate(booking.startsAt)}`} accessibilityHint="Confirms this appointment for the customer." accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => onReview(booking.id, 'confirmed')} style={styles.confirm}><Text style={styles.confirmText}>{updating ? 'Submitting...' : 'Confirm'}</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel={`Decline ${booking.customerName ?? 'customer'}'s ${booking.serviceName} appointment at ${formatBookingDate(booking.startsAt)}`} accessibilityHint="Declines this appointment for the customer." accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => onReview(booking.id, 'declined')} style={styles.decline}><Text style={styles.declineText}>{updating ? 'Submitting...' : 'Decline'}</Text></Pressable></View> : <Text style={styles.readOnly}>Read-only appointment</Text>}
+    {isPending ? <View style={styles.actions}><Pressable accessibilityRole="button" accessibilityLabel={`Confirm ${booking.customerName ?? 'customer'}'s ${booking.serviceName} appointment at ${formatBookingDate(booking.startsAt)}`} accessibilityHint="Confirms this appointment for the customer." accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => onReview(booking.id, 'confirmed')} style={styles.confirm}><Text style={styles.confirmText}>{updating ? 'Submitting...' : 'Confirm'}</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel={`Decline ${booking.customerName ?? 'customer'}'s ${booking.serviceName} appointment at ${formatBookingDate(booking.startsAt)}`} accessibilityHint="Declines this appointment for the customer." accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => onReview(booking.id, 'declined')} style={styles.decline}><Text style={styles.declineText}>{updating ? 'Submitting...' : 'Decline'}</Text></Pressable></View> : isConfirmed ? <View style={styles.actions}><Pressable accessibilityRole="button" accessibilityLabel="Mark appointment completed" accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => onReview(booking.id, 'completed')} style={styles.confirm}><Text style={styles.confirmText}>{updating ? 'Submitting...' : 'Complete'}</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Mark appointment no-show" accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => onReview(booking.id, 'no_show')} style={styles.decline}><Text style={styles.declineText}>{updating ? 'Submitting...' : 'No-show'}</Text></Pressable></View> : <Text style={styles.readOnly}>Read-only appointment</Text>}
   </Pressable>;
 }
 

@@ -1,4 +1,4 @@
--- Allow active studio members to operate bookings for their studio.
+-- Add provider completion and no-show transitions to the already-deployed status RPC.
 create or replace function public.update_booking_status(
   p_booking_id uuid,
   p_status public.booking_status
@@ -19,6 +19,7 @@ begin
   if current_role is null then raise exception using errcode = '42501', message = 'Authenticated user profile is required'; end if;
   select * into target_booking from public.bookings where id = p_booking_id for update;
   if not found then raise exception using errcode = 'P0002', message = 'Booking not found'; end if;
+
   if p_status in ('confirmed', 'declined') then
     if target_booking.status <> 'pending' then raise exception using errcode = '22023', message = 'Only pending bookings can be reviewed'; end if;
   elsif p_status in ('completed', 'no_show') then
@@ -46,26 +47,3 @@ $$;
 
 revoke all on function public.update_booking_status(uuid, public.booking_status) from public;
 grant execute on function public.update_booking_status(uuid, public.booking_status) to authenticated;
-
--- Return one thread per booking even before the first message is sent.
-create or replace function public.list_my_messages()
-returns table (id uuid, conversation_id uuid, booking_id uuid, sender_id uuid, participant_id uuid, participant_name text, body text, created_at timestamptz, unread boolean)
-language sql stable security definer
-set search_path = public, extensions, pg_temp
-as $$
-  select distinct on (c.id)
-    coalesce(m.id, c.id), c.id, c.booking_id, coalesce(m.sender_id, auth.uid()), other.user_id, u.display_name,
-    coalesce(m.body, 'Start a conversation about this booking.'), coalesce(m.created_at, c.created_at),
-    (m.id is not null and coalesce(rs.last_read_at, '-infinity'::timestamptz) < m.created_at and m.sender_id <> auth.uid())
-  from public.conversations c
-  join public.conversation_members mine on mine.conversation_id = c.id and mine.user_id = auth.uid()
-  join public.conversation_members other on other.conversation_id = c.id and other.user_id <> auth.uid()
-  join public.users u on u.id = other.user_id
-  left join public.messages m on m.id = (select latest.id from public.messages latest where latest.conversation_id = c.id order by latest.created_at desc limit 1)
-  left join public.conversation_read_state rs on rs.conversation_id = c.id and rs.user_id = auth.uid()
-  where public.messaging_actor_can_access(c.id)
-  order by c.id, m.created_at desc nulls last;
-$$;
-
-revoke all on function public.list_my_messages() from public;
-grant execute on function public.list_my_messages() to authenticated;

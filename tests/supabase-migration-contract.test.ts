@@ -35,6 +35,9 @@ describe('Supabase authorization and concurrency migration contracts', () => {
     expect(sql).toContain("current_role <> 'admin'");
     expect(sql).toContain('target_booking.studio_id');
     expect(sql).toContain("Only pending bookings can be reviewed");
+    expect(sql).toContain("p_status in ('completed', 'no_show')");
+    expect(sql).toContain("target_booking.status <> 'confirmed'");
+    expect(sql).toContain("jsonb_build_object('previous_status', previous_status, 'status', p_status)");
   });
 
   it('requires message membership, booking access, and idempotency hash equality', () => {

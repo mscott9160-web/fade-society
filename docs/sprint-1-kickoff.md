@@ -78,7 +78,16 @@ Progress: source-level fixes and the audit matrix are complete. Physical iPhone/
 Owner: Backend / Provider
 Status: In progress
 
-Focus: add valid provider status transitions for completed and no-show appointments with server authorization and audit evidence.
+Status: Complete
+
+Outcome: confirmed provider bookings can be completed or marked no-show through the authorized RPC, with audit metadata and local transition coverage. Migration `0013` is live.
+
+### FS-007: Availability Editor
+
+Owner: Backend / Frontend
+Status: In progress
+
+Focus: let authorized providers manage future slots without reopening booked availability or creating timezone ambiguity.
 
 ## Next Ready Stories
 

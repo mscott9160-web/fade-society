@@ -77,7 +77,7 @@ export function updateBookingStatus(bookings: Booking[], id: string, status: Boo
   return bookings.map((booking) => {
     if (booking.id !== id) return booking;
     const allowed = booking.status === 'pending' && ['confirmed', 'cancelled', 'declined', 'failed'].includes(status)
-      || booking.status === 'confirmed' && ['completed', 'cancelled'].includes(status)
+      || booking.status === 'confirmed' && ['completed', 'no_show', 'cancelled'].includes(status)
       || booking.status === 'cancelled' && status === 'confirmed';
     return allowed ? { ...booking, status } : booking;
   });

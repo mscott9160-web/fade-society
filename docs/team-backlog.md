@@ -120,7 +120,7 @@ Implementation note: Today cards now open the provider detail route on native an
 
 - Owner: Backend / Provider
 - Priority: P1
-- Status: In progress
+- Status: Complete
 - Depends on: FS-003
 
 As a barber, I want to mark an appointment completed or no-show so that booking history is accurate.
@@ -133,11 +133,13 @@ Acceptance criteria:
 - Customer and provider views converge after refresh.
 - Duplicate requests are safe.
 
+Implementation note: provider completion and no-show transitions are live through migration `0013_provider_completion_status.sql`; audit metadata records both previous and resulting status.
+
 ### FS-007: Availability Editor
 
 - Owner: Backend / Frontend
 - Priority: P1
-- Status: Planned
+- Status: In progress
 - Depends on: FS-006
 
 As a barber, I want to manage future availability so that customers see accurate appointment times.
