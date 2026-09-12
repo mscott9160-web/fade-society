@@ -135,7 +135,7 @@ Implementation note: provider details now expose confirmation code, appointment 
 
 - Owner: Backend / Frontend
 - Priority: P1
-- Status: In progress
+- Status: Complete
 - Depends on: BP-002, BP-003
 
 As a barber, I want schedule-oriented availability management so that I do not type every slot manually.
@@ -150,11 +150,13 @@ Acceptance criteria:
 - Recurring hours, breaks, blackout dates, and buffers have explicit scope or are clearly deferred.
 - Customer availability reflects provider changes after refresh.
 
+Implementation note: migration `0020_schedule_based_availability.sql` adds overlap exclusion, scoped edit authorization, and audit events. The UI now uses native date/time pickers, explicit timezone, date-grouped slots, retry, and removal confirmation. Recurring hours, breaks, blackout dates, and buffers remain deferred.
+
 ### BP-008: Provider Identity And Settings
 
 - Owner: Frontend / UX
 - Priority: P1
-- Status: Planned
+- Status: In progress
 - Depends on: BP-005, BP-007
 
 As a barber, I want Profile and Settings to reflect my provider identity and studio context so that the app does not feel like a customer screen with hidden tools.
