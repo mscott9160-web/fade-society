@@ -96,7 +96,7 @@ Implementation note: migration `0018_conversation_first_class_messaging.sql` mak
 
 - Owner: Frontend / UX
 - Priority: P0
-- Status: In progress
+- Status: Complete
 - Depends on: BP-002, BP-003
 
 As a barber, I want a chronological day view so that I can identify my next appointment and unresolved work within seconds.
@@ -110,11 +110,13 @@ Acceptance criteria:
 - Refresh and last-updated state are clear.
 - Long names, prices, and actions remain usable with larger text.
 
+Implementation note: Today now has scoped refresh, last-updated feedback, counts, next appointment summary, date navigation, relative date labels, and separate pending/schedule empty states.
+
 ### BP-006: Provider Appointment Readiness
 
 - Owner: Frontend / UX
 - Priority: P1
-- Status: Planned
+- Status: In progress
 - Depends on: BP-001, BP-004
 
 As a barber, I want authorized customer and service context so that I can prepare for the appointment without exposing unrelated personal data.

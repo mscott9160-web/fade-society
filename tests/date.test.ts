@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupBookingTimes } from '../src/domain/date';
+import { getLocalDateKey, getRelativeDateLabel, groupBookingTimes } from '../src/domain/date';
 
 describe('groupBookingTimes', () => {
   it('groups and orders supplied timestamps', () => {
@@ -11,5 +11,14 @@ describe('groupBookingTimes', () => {
 
   it('omits invalid timestamps safely', () => {
     expect(groupBookingTimes(['invalid', '']).flatMap((group) => group.times)).toEqual([]);
+  });
+});
+
+describe('provider schedule dates', () => {
+  it('labels local calendar days relative to today', () => {
+    const now = new Date(2026, 7, 24, 12);
+    expect(getLocalDateKey(new Date(2026, 7, 24, 9))).toBe('2026-7-24');
+    expect(getRelativeDateLabel(new Date(2026, 7, 24, 9), now)).toBe('Today');
+    expect(getRelativeDateLabel(new Date(2026, 7, 25, 9), now)).toBe('Tomorrow');
   });
 });

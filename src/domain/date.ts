@@ -4,6 +4,23 @@ export function formatBookingDate(startsAt: string) {
   return date.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
+export function getLocalDateKey(startsAt: string | Date) {
+  const date = startsAt instanceof Date ? startsAt : new Date(startsAt);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+export function getRelativeDateLabel(startsAt: string | Date, now = new Date()) {
+  const date = startsAt instanceof Date ? startsAt : new Date(startsAt);
+  if (Number.isNaN(date.getTime())) return 'Date unavailable';
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayOffset = Math.round((target.getTime() - today.getTime()) / 86400000);
+  if (dayOffset === 0) return 'Today';
+  if (dayOffset === 1) return 'Tomorrow';
+  return target.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+}
+
 export type DateTimeGroup = {
   date: string;
   label: string;

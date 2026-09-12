@@ -34,6 +34,7 @@ type AppStore = {
   addProviderSlot: (barberId: string, startsAt: string, endsAt: string) => Promise<ProviderAvailabilitySlot>;
   removeProviderSlot: (slotId: string) => Promise<ProviderAvailabilitySlot>;
   refreshCatalog: () => Promise<void>;
+  refreshBookings: () => Promise<void>;
   rescheduleBooking: (id: string, startsAt: string) => Promise<void>;
   cancelBooking: (id: string) => Promise<void>;
   restoreBooking: (id: string) => void;
@@ -106,6 +107,25 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       setMessageLoading(false);
     }
   }, [currentUser]);
+
+  const refreshBookings = useCallback(async () => {
+    if (getDataMode() !== 'supabase' || !currentUser) return;
+    setBookingLoading(true);
+    setBookingError(null);
+    try {
+      const repository = createSupabaseRepositories().booking;
+      const nextBookings = role === 'customer'
+        ? await repository.listMine(currentUser.id)
+        : await repository.listForProvider(currentUser.id);
+      setBookings(nextBookings);
+    } catch (error) {
+      setBookingError(getErrorMessage(error));
+      throw error;
+    } finally {
+      setBookingLoading(false);
+      setHydrated(true);
+    }
+  }, [currentUser, role]);
 
   useEffect(() => {
     let active = true;
@@ -357,6 +377,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     listProviderSlots,
     addProviderSlot,
     removeProviderSlot,
+    refreshBookings,
     refreshCatalog: async () => {
       if (getDataMode() !== 'supabase') return;
       setCatalogLoading(true);
@@ -460,7 +481,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
     },
-  }), [authBootstrapState, authError, barbers, bookings, bookingError, bookingLoading, catalogError, catalogLoading, currentUser, hydrated, listAvailability, listProviderSlots, addProviderSlot, removeProviderSlot, listServices, messageError, messageLoading, messages, persistenceError, preferences, refreshMessages, role, studios]);
+  }), [authBootstrapState, authError, barbers, bookings, bookingError, bookingLoading, catalogError, catalogLoading, currentUser, hydrated, listAvailability, listProviderSlots, addProviderSlot, removeProviderSlot, listServices, messageError, messageLoading, messages, persistenceError, preferences, refreshBookings, refreshMessages, role, studios]);
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>;
 }
