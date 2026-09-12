@@ -9,7 +9,7 @@ export default function AppTabs() {
   const { role } = useAppStore();
   const providerMode = role === 'barber' || role === 'owner' || role === 'admin';
   const visibleTabs = providerMode
-    ? [{ href: '/today' as const, label: 'Today', icon: 'briefcase-outline' as const }, { href: '/profile' as const, label: 'Profile', icon: 'person-outline' as const }]
+    ? [{ href: '/today' as const, label: 'Today', icon: 'briefcase-outline' as const }, { href: '/messages' as const, label: 'Messages', icon: 'chatbubble-outline' as const }, { href: '/profile' as const, label: 'Profile', icon: 'person-outline' as const }]
     : customerTabs.map((tab) => ({ ...tab, icon: tab.href === '/' ? 'home-outline' as const : tab.href === '/find' ? 'search-outline' as const : tab.href === '/bookings' ? 'calendar-outline' as const : tab.href === '/messages' ? 'chatbubble-outline' as const : 'person-outline' as const }));
   return (
     <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: theme.text, tabBarInactiveTintColor: theme.secondaryText, tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border } }}>

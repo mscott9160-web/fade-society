@@ -6,6 +6,190 @@ Last updated: 2026-09-12
 
 This backlog turns the next product improvements into executable stories. Stories are ordered by dependency and user value. The app is still an internal demo and is not approved for public launch.
 
+## Barber-Side Review Stream
+
+The barber-side team review agreed that Find/Explore remains customer-only. The provider workflow should be organized around running the day: Today, Messages, Profile, appointment details, availability, and authorized studio scope.
+
+### BP-001: Provider Navigation And Action Parity
+
+- Owner: Frontend / UX
+- Priority: P0
+- Status: Complete
+- Depends on: FS-005, FS-010
+
+As a barber, I want predictable access to Today, Messages, and Profile, and I want appointment details to expose the actions valid for the booking status.
+
+Acceptance criteria:
+
+- Barber, owner, and admin navigation shows Today, Messages, and Profile.
+- Find/Explore remains customer-only.
+- Pending appointment details show Confirm and Decline.
+- Confirmed appointment details show Complete and No-show.
+- Terminal statuses are read-only with clear explanation.
+- Today and details share loading, timeout, error, success, and retry behavior.
+- Provider conversation entry preserves booking context.
+- Native and web navigation expose equivalent provider destinations.
+
+Implementation note: provider navigation now exposes Today, Messages, and Profile while keeping Find/Explore customer-only. Appointment details mirror status-valid actions with bounded feedback.
+
+### BP-002: Provider-Scoped Booking Read Model
+
+- Owner: Backend / Architecture
+- Priority: P0
+- Status: Planned
+- Depends on: BP-001
+
+As a provider, I want booking reads to match my authorized barber/studio scope so that the UI never relies on broad table reads or stale client role assumptions.
+
+Acceptance criteria:
+
+- Barber sees only assigned bookings.
+- Owner/admin sees only authorized studio bookings.
+- Cross-studio reads and deep links are denied.
+- Provider list and detail use explicit server-authorized RPCs.
+- Customer booking reads remain separate from provider reads.
+- Scope is deterministic, ordered, and refreshable.
+
+### BP-003: Safe Provider Status Transitions
+
+- Owner: Backend / QA
+- Priority: P0
+- Status: Planned
+- Depends on: BP-002
+
+As a provider, I want status actions to be safe when retried or used concurrently so that a network failure cannot create contradictory appointment state.
+
+Acceptance criteria:
+
+- Barber can mutate only their own bookings; owner/admin scope is explicit.
+- Same-target retries are idempotent.
+- Conflicting terminal transitions remain rejected.
+- Concurrent review produces one valid state transition and one audit event.
+- Customer/provider views converge after refresh.
+
+### BP-004: Provider Messages As A First-Class Workflow
+
+- Owner: Frontend / Backend
+- Priority: P0
+- Status: Planned
+- Depends on: BP-001, BP-002
+
+As a barber, I want a direct message inbox with booking context so that customer communication does not depend on opening Today first.
+
+Acceptance criteria:
+
+- Provider Messages is a primary navigation destination.
+- Unread state is visible and accessible.
+- Every authorized booking exposes Message customer.
+- Empty booking threads can be started.
+- Conversation identity uses conversation ID, not only participant ID.
+- Read state is scoped to one booking conversation.
+- Message retries reuse a stable idempotency key.
+
+### BP-005: Run My Day Schedule
+
+- Owner: Frontend / UX
+- Priority: P0
+- Status: Planned
+- Depends on: BP-002, BP-003
+
+As a barber, I want a chronological day view so that I can identify my next appointment and unresolved work within seconds.
+
+Acceptance criteria:
+
+- Pending requests remain prioritized.
+- Confirmed appointments are grouped by date and ordered by time.
+- Today, next, later, completed, cancelled, and no-show states are distinct.
+- Counts and next appointment are visible without scanning every card.
+- Refresh and last-updated state are clear.
+- Long names, prices, and actions remain usable with larger text.
+
+### BP-006: Provider Appointment Readiness
+
+- Owner: Frontend / UX
+- Priority: P1
+- Status: Planned
+- Depends on: BP-001, BP-004
+
+As a barber, I want authorized customer and service context so that I can prepare for the appointment without exposing unrelated personal data.
+
+Acceptance criteria:
+
+- Details show customer, service, duration, price, time, studio, status, and confirmation code.
+- Authorized notes/preferences are visible when the model supports them.
+- Message customer is always available for an authorized booking.
+- Missing service/customer data has explicit loading/error/fallback states.
+- Customer contact data is limited to booking context.
+
+### BP-007: Schedule-Based Availability
+
+- Owner: Backend / Frontend
+- Priority: P1
+- Status: Planned
+- Depends on: BP-002, BP-003
+
+As a barber, I want schedule-oriented availability management so that I do not type every slot manually.
+
+Acceptance criteria:
+
+- Native date/time controls replace free-form entry.
+- Timezone is explicit.
+- Overlapping slots are rejected server-side.
+- Booked slots cannot be reopened or removed.
+- Removal is confirmed and audited.
+- Recurring hours, breaks, blackout dates, and buffers have explicit scope or are clearly deferred.
+- Customer availability reflects provider changes after refresh.
+
+### BP-008: Provider Identity And Settings
+
+- Owner: Frontend / UX
+- Priority: P1
+- Status: Planned
+- Depends on: BP-005, BP-007
+
+As a barber, I want Profile and Settings to reflect my provider identity and studio context so that the app does not feel like a customer screen with hidden tools.
+
+Acceptance criteria:
+
+- Provider name, role, and studio context are visible.
+- Profile links to Today, Messages, Availability, and Settings.
+- Metrics use provider language.
+- Owner/admin scope is distinguishable from barber scope.
+- Sign out and accessibility controls remain reachable.
+
+### BP-009: Provider Exception Recovery
+
+- Owner: Backend / Provider / QA
+- Priority: P1
+- Status: Planned
+- Depends on: BP-003, BP-004
+
+As a provider, I want safe recovery for late, cancelled, no-show, and incorrectly updated appointments so that common disruptions do not require support intervention.
+
+Acceptance criteria:
+
+- No-show has confirmation, grace-period guidance, and optional reason.
+- Incorrect status changes have a documented correction path.
+- Customer/provider receive consistent resulting state.
+- Audit events capture actor, previous state, resulting state, and reason when supplied.
+
+### BP-010: Barber-Side Live Validation Matrix
+
+- Owner: QA / Backend
+- Priority: P0
+- Status: Planned
+- Depends on: BP-002, BP-003, BP-004, BP-007
+
+As the team, we want live multi-account and device evidence that the barber workflow is authorized, concurrent-safe, and usable.
+
+Acceptance criteria:
+
+- Owning barber, other barber, owner/admin, customer, and cross-studio cases are tested.
+- Booking and availability races are tested with two clients.
+- Message retry/read scope is tested with two bookings involving the same participants.
+- VoiceOver, larger text, browser keyboard, and dark/light mode are tested on target devices.
+- Findings include route, role, device, reproduction steps, severity, and owner.
+
 ## Working Agreements
 
 - The server owns identity, roles, studio membership, pricing, availability, booking state, and message authorization.
