@@ -107,4 +107,12 @@ describe('Supabase booking repository', () => {
     const missingRepository = createSupabaseBookingRepository(null);
     await expect(missingRepository.listMine('u')).rejects.toThrow('Supabase is not configured');
   });
+
+  it('sends provider status changes through the server-authoritative RPC', async () => {
+    const { client, calls } = makeClient([bookingRow], [{ id: 'booking-1' }]);
+    await expect(createSupabaseBookingRepository(client).updateStatus('barber-1', 'booking-1', 'completed')).resolves.toMatchObject({ id: 'booking-1' });
+    expect(calls).toContainEqual({ method: 'rpc', args: ['update_booking_status', {
+      p_booking_id: 'booking-1', p_status: 'completed',
+    }] });
+  });
 });

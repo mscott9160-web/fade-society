@@ -56,7 +56,7 @@ Implementation note: migration `0016_provider_booking_read_model.sql` provides e
 
 - Owner: Backend / QA
 - Priority: P0
-- Status: In progress
+- Status: Complete
 - Depends on: BP-002
 
 As a provider, I want status actions to be safe when retried or used concurrently so that a network failure cannot create contradictory appointment state.
@@ -69,11 +69,13 @@ Acceptance criteria:
 - Concurrent review produces one valid state transition and one audit event.
 - Customer/provider views converge after refresh.
 
+Implementation note: migration `0017_safe_provider_status_transitions.sql` narrows barber mutations to assigned bookings, requires active owner/admin membership, preserves conflicting-transition rejection, and makes same-target retries return without duplicate audit events.
+
 ### BP-004: Provider Messages As A First-Class Workflow
 
 - Owner: Frontend / Backend
 - Priority: P0
-- Status: Planned
+- Status: In progress
 - Depends on: BP-001, BP-002
 
 As a barber, I want a direct message inbox with booking context so that customer communication does not depend on opening Today first.

@@ -91,4 +91,20 @@ describe('Supabase authorization and concurrency migration contracts', () => {
     expect(sql).toContain('revoke all on function public.list_provider_bookings()');
     expect(sql).toContain('grant execute on function public.get_provider_booking(uuid) to authenticated');
   });
+
+  it('makes provider status transitions scoped, retry-safe, terminal-safe, and audited', () => {
+    const sql = migration('0017_safe_provider_status_transitions.sql');
+    expect(sql).toContain('create or replace function public.update_booking_status');
+    expect(sql).toContain("current_role = 'barber' and target_booking.barber_id = current_user_id");
+    expect(sql).toContain("current_role in ('owner', 'admin')");
+    expect(sql).toContain('membership.active');
+    expect(sql).toContain("membership.membership_role in ('owner', 'admin')");
+    expect(sql).toContain('for update');
+    expect(sql).toContain('if target_booking.status = p_status then');
+    expect(sql).toContain('return next target_booking;');
+    expect(sql).toContain('Only pending bookings can be reviewed');
+    expect(sql).toContain('Only confirmed bookings can be completed or marked no-show');
+    expect(sql).toContain("jsonb_build_object('previous_status', previous_status, 'status', target_booking.status)");
+    expect(sql).toContain('revoke all on function public.update_booking_status(uuid, public.booking_status) from public');
+  });
 });
