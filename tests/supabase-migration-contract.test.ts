@@ -75,6 +75,20 @@ describe('Supabase authorization and concurrency migration contracts', () => {
     expect(sql).toContain('revoke all on function');
   });
 
+  it('prevents overlapping availability and audits scoped schedule edits', () => {
+    const sql = migration('0020_schedule_based_availability.sql');
+    expect(sql).toContain('create extension if not exists btree_gist');
+    expect(sql).toContain('availability_slots_no_overlap');
+    expect(sql).toContain("tstzrange(starts_at, ends_at, '[)') with &&");
+    expect(sql).toContain("current_role = 'barber' and p_barber_id = current_user_id");
+    expect(sql).toContain("target_slot.barber_id = current_user_id");
+    expect(sql).toContain("current_role in ('owner', 'admin')");
+    expect(sql).toContain('provider_availability_added');
+    expect(sql).toContain('provider_availability_removed');
+    expect(sql).toContain('target_slot.available');
+    expect(sql).toContain('where availability_slot_id = target_slot.id');
+  });
+
   it('keeps customer booking changes owned, policy-bound, audited, and slot-safe', () => {
     const sql = migration('0015_customer_booking_changes.sql');
     expect(sql).toContain('create or replace function public.cancel_my_booking');
