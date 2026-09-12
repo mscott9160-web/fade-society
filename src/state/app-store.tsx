@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
-import type { AvailabilitySlot, Barber, Booking, BookingStatus, Message, PersistedState, Role, Service, Studio, User, UserPreferences } from '@/domain/models';
+import type { AvailabilitySlot, Barber, Booking, BookingStatus, Message, PersistedState, ProviderAvailabilitySlot, Role, Service, Studio, User, UserPreferences } from '@/domain/models';
 import type { AuthCredentials, AuthResult, CreateBookingInput } from '@/data/repositories';
 import { addBooking, appendMessage, defaultPreferences, markMessagesRead, seedBookings, seedMessages, updateBookingStatus, updateBookingTime, validatePersistedState } from './app-store-core';
 import { services as localServices } from '@/domain/catalog';
@@ -29,6 +29,9 @@ type AppStore = {
   getBooking: (id: string) => Promise<Booking>;
   listServices: (barberId: string) => Promise<Service[]>;
   listAvailability: (barberId: string, from: string, to: string) => Promise<AvailabilitySlot[]>;
+  listProviderSlots: (barberId: string, from: string, to: string) => Promise<ProviderAvailabilitySlot[]>;
+  addProviderSlot: (barberId: string, startsAt: string, endsAt: string) => Promise<ProviderAvailabilitySlot>;
+  removeProviderSlot: (slotId: string) => Promise<ProviderAvailabilitySlot>;
   refreshCatalog: () => Promise<void>;
   rescheduleBooking: (id: string, startsAt: string) => void;
   cancelBooking: (id: string) => void;
@@ -255,6 +258,18 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
   const listServices = useCallback(async (barberId: string) => getDataMode() === 'local' ? localServices : createSupabaseRepositories().catalog.listServices(barberId), []);
   const listAvailability = useCallback(async (barberId: string, from: string, to: string) => getDataMode() === 'local' ? [] : createSupabaseRepositories().catalog.listAvailability(barberId, from, to), []);
+  const listProviderSlots = useCallback(async (barberId: string, from: string, to: string) => {
+    if (getDataMode() === 'local' || !currentUser) return [];
+    return createSupabaseRepositories().availability.listProviderSlots(currentUser.id, barberId, from, to);
+  }, [currentUser]);
+  const addProviderSlot = useCallback(async (barberId: string, startsAt: string, endsAt: string) => {
+    if (getDataMode() === 'local' || !currentUser) throw new Error('Authenticated provider required');
+    return createSupabaseRepositories().availability.addProviderSlot(currentUser.id, barberId, startsAt, endsAt);
+  }, [currentUser]);
+  const removeProviderSlot = useCallback(async (slotId: string) => {
+    if (getDataMode() === 'local' || !currentUser) throw new Error('Authenticated provider required');
+    return createSupabaseRepositories().availability.removeProviderSlot(currentUser.id, slotId);
+  }, [currentUser]);
 
   const value = useMemo<AppStore>(() => ({
     role,
@@ -319,6 +334,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     },
     listServices,
     listAvailability,
+    listProviderSlots,
+    addProviderSlot,
+    removeProviderSlot,
     refreshCatalog: async () => {
       if (getDataMode() !== 'supabase') return;
       setCatalogLoading(true);
@@ -411,7 +429,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
     },
-  }), [authBootstrapState, authError, barbers, bookings, bookingError, bookingLoading, catalogError, catalogLoading, currentUser, hydrated, listAvailability, listServices, messageError, messageLoading, messages, persistenceError, preferences, role, studios]);
+  }), [authBootstrapState, authError, barbers, bookings, bookingError, bookingLoading, catalogError, catalogLoading, currentUser, hydrated, listAvailability, listProviderSlots, addProviderSlot, removeProviderSlot, listServices, messageError, messageLoading, messages, persistenceError, preferences, role, studios]);
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>;
 }

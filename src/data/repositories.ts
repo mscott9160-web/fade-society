@@ -1,4 +1,4 @@
-import type { AvailabilitySlot, Barber, Booking, Message, Role, Service, Studio, User } from '@/domain/models';
+import type { AvailabilitySlot, Barber, Booking, Message, ProviderAvailabilitySlot, Role, Service, Studio, User } from '@/domain/models';
 
 export type AuthCredentials = {
   email: string;
@@ -34,6 +34,12 @@ export type CatalogRepository = {
   listBarbers: (studioId?: string) => Promise<Barber[]>;
   listServices: (barberId: string) => Promise<Service[]>;
   listAvailability: (barberId: string, from: string, to: string) => Promise<AvailabilitySlot[]>;
+};
+
+export type AvailabilityRepository = {
+  listProviderSlots: (userId: string, barberId: string, from: string, to: string) => Promise<ProviderAvailabilitySlot[]>;
+  addProviderSlot: (userId: string, barberId: string, startsAt: string, endsAt: string) => Promise<ProviderAvailabilitySlot>;
+  removeProviderSlot: (userId: string, slotId: string) => Promise<ProviderAvailabilitySlot>;
 };
 
 export type MessageRepository = {

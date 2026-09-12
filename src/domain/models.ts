@@ -37,6 +37,8 @@ export type AvailabilitySlot = {
   available: boolean;
 };
 
+export type ProviderAvailabilitySlot = AvailabilitySlot & { endsAt: string };
+
 export type Booking = {
   id: string;
   customerName?: string;

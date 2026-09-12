@@ -45,6 +45,7 @@ export default function TodayScreen() {
     <Text style={styles.eyebrow}>Provider desk</Text>
     <Text style={styles.title}>Today</Text>
     <Text style={styles.subtitle}>Review requests and keep the studio schedule moving.</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel="Open provider availability" accessibilityHint="Manage your next 14 days of appointment slots" onPress={() => router.push('/availability')} style={styles.confirm}><Text style={styles.confirmText}>Manage availability</Text></Pressable>
     {(bookingError || actionError || actionMessage) && <Text accessibilityRole="alert" style={actionError || bookingError ? styles.error : styles.success}>{actionError ?? bookingError ?? actionMessage}</Text>}
     {bookingLoading ? <View style={styles.stateCard}><Text style={styles.cardTitle}>Loading appointments</Text><Text style={styles.copy}>Checking the studio schedule...</Text></View> : pending.length === 0 ? <View style={styles.emptyCard}><Text style={styles.cardTitle}>No pending requests</Text><Text style={styles.copy}>New customer requests will appear here for review.</Text></View> : <View><Text style={styles.sectionTitle}>Needs review</Text>{pending.map((booking) => <BookingCard key={booking.id} booking={booking} updating={updatingId === booking.id} onReview={review} onOpen={() => router.push({ pathname: '/booking/[id]', params: { id: booking.id } })} styles={styles} statusColors={theme.statusColors} />)}</View>}
     <Text style={styles.sectionTitle}>Upcoming</Text>

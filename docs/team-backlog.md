@@ -139,7 +139,7 @@ Implementation note: provider completion and no-show transitions are live throug
 
 - Owner: Backend / Frontend
 - Priority: P1
-- Status: In progress
+- Status: Complete
 - Depends on: FS-006
 
 As a barber, I want to manage future availability so that customers see accurate appointment times.
@@ -151,6 +151,8 @@ Acceptance criteria:
 - Timezone is explicit and consistent between provider and customer views.
 - Customer availability refreshes after provider changes.
 - Concurrent booking and slot edits cannot create double bookings.
+
+Implementation note: the scoped editor supports authorized future slot add/remove with explicit timestamptz RPCs and booked-slot protection. Recurring hours, breaks, blackout dates, and buffers remain future extensions.
 
 ## Sprint 3: Trust, Recovery, And Accessibility
 

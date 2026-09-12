@@ -49,4 +49,19 @@ describe('Supabase authorization and concurrency migration contracts', () => {
     expect(sql).toContain("Conversation access denied");
      expect(schema).toContain('primary key (actor_id, idempotency_key)');
   });
+
+  it('keeps provider availability behind scoped, future-only RPCs', () => {
+    const sql = migration('0014_provider_availability_slots.sql');
+    expect(sql).toContain('create or replace function public.list_provider_availability');
+    expect(sql).toContain('create or replace function public.add_provider_availability');
+    expect(sql).toContain('create or replace function public.remove_provider_availability');
+    expect(sql).toContain("membership_role in ('barber', 'owner', 'admin')");
+    expect(sql).toContain('current_role <> \'admin\'');
+    expect(sql).toContain('p_starts_at <= now()');
+    expect(sql).toContain('p_starts_at >= p_ends_at');
+    expect(sql).toContain('for update');
+    expect(sql).toContain('where availability_slot_id = target_slot.id');
+    expect(sql).toContain('timestamptz');
+    expect(sql).toContain('revoke all on function');
+  });
 });

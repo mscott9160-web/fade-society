@@ -87,7 +87,9 @@ Outcome: confirmed provider bookings can be completed or marked no-show through 
 Owner: Backend / Frontend
 Status: In progress
 
-Focus: let authorized providers manage future slots without reopening booked availability or creating timezone ambiguity.
+Status: Complete
+
+Outcome: authorized providers can select a barber, list the next 14 days, add future slots, and remove only unbooked future slots through migration `0014`. Recurring hours, breaks, blackout dates, and buffers remain future scope.
 
 ## Next Ready Stories
 

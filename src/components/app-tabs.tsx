@@ -12,6 +12,7 @@ export default function AppTabs() {
   return (
     <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: theme.text, tabBarInactiveTintColor: theme.secondaryText, tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border } }}>
       <Tabs.Screen name="today" options={{ href: providerMode ? '/today' : null, title: 'Today', tabBarIcon: ({ color, size }) => <Ionicons name="briefcase-outline" color={color} size={size} /> }} />
+      <Tabs.Screen name="availability" options={{ href: null }} />
       {visibleTabs.map((tab) => <Tabs.Screen key={tab.href} name={tab.href === '/' ? 'index' : tab.href.slice(1)} options={{ title: tab.label, tabBarIcon: ({ color, size }) => <Ionicons name={tab.href === '/' ? 'home-outline' : tab.href === '/find' ? 'search-outline' : tab.href === '/bookings' ? 'calendar-outline' : tab.href === '/messages' ? 'chatbubble-outline' : 'person-outline'} color={color} size={size} /> }} />)}
       <Tabs.Screen name="calendar" options={{ href: null }} />
       <Tabs.Screen name="explore" options={{ href: null }} />
