@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '@/state/app-store';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
+import { getErrorMessage } from '@/domain/error';
 
 export default function ConversationScreen() {
   const { id, bookingId } = useLocalSearchParams<{ id?: string; bookingId?: string }>();
@@ -28,7 +29,7 @@ export default function ConversationScreen() {
       await sendMessage({ participantId: id, participantName: participant, bookingId: booking?.id, body });
       setDraft('');
     } catch (error) {
-      setSendError(error instanceof Error ? error.message : String(error));
+      setSendError(getErrorMessage(error, 'Message could not be sent. Please try again.'));
     } finally {
       setSending(false);
     }

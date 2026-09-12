@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '@/state/app-store';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
 import type { ProviderAvailabilitySlot } from '@/domain/models';
+import { getErrorMessage } from '@/domain/error';
 
 const PROVIDER_ROLES = ['barber', 'owner', 'admin'];
 const DAY_COUNT = 14;
@@ -41,12 +42,24 @@ export default function AvailabilityScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const activeBarberId = role === 'barber' ? currentUser?.id : selectedBarberId ?? barbers[0]?.id;
 
+  const loadSlots = useCallback(async () => {
+    if (!providerAccess || !currentUser || !activeBarberId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      setSlots(await listProviderSlots(activeBarberId, range.from, range.to));
+    } catch (cause: unknown) {
+      setError(getErrorMessage(cause, 'Availability could not be loaded. Please try again.'));
+    } finally {
+      setLoading(false);
+    }
+  }, [activeBarberId, currentUser, listProviderSlots, providerAccess, range.from, range.to]);
+
   useEffect(() => {
     if (!providerAccess || !currentUser || !activeBarberId) return;
-    let active = true;
-    listProviderSlots(activeBarberId, range.from, range.to).then((next) => { if (active) setSlots(next); }).catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : 'Availability could not be loaded.'); }).finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [activeBarberId, currentUser, listProviderSlots, providerAccess, range.from, range.to]);
+    const timer = setTimeout(() => { void loadSlots(); }, 0);
+    return () => clearTimeout(timer);
+  }, [loadSlots, providerAccess, currentUser, activeBarberId]);
 
   async function submit() {
     setError(null); setMessage(null);
@@ -60,12 +73,12 @@ export default function AvailabilityScreen() {
       const slot = await addProviderSlot(activeBarberId, startsAt, endsAt);
       setSlots((current) => [...current, slot].sort((left, right) => left.startsAt.localeCompare(right.startsAt)));
       setDate(''); setStartTime(''); setEndTime(''); setMessage('Availability added.');
-    } catch (cause: unknown) { setError(cause instanceof Error ? cause.message : 'Availability could not be added.'); } finally { setSubmitting(false); }
+    } catch (cause: unknown) { setError(getErrorMessage(cause, 'Availability could not be added. Please try again.')); } finally { setSubmitting(false); }
   }
 
   async function remove(slot: ProviderAvailabilitySlot) {
     setError(null); setMessage(null); setRemovingId(slot.id);
-    try { await removeProviderSlot(slot.id); setSlots((current) => current.filter((item) => item.id !== slot.id)); setMessage('Availability removed.'); } catch (cause: unknown) { setError(cause instanceof Error ? cause.message : 'Availability could not be removed.'); } finally { setRemovingId(null); }
+    try { await removeProviderSlot(slot.id); setSlots((current) => current.filter((item) => item.id !== slot.id)); setMessage('Availability removed.'); } catch (cause: unknown) { setError(getErrorMessage(cause, 'Availability could not be removed. Please try again.')); } finally { setRemovingId(null); }
   }
 
   if (!providerAccess) return <SafeAreaView style={styles.safeArea}><View style={styles.empty}><Text style={styles.title}>Provider access required</Text><Text style={styles.copy}>Sign in with a barber, owner, or admin account to manage availability.</Text></View></SafeAreaView>;

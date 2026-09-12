@@ -31,7 +31,7 @@ export default function TodayScreen() {
       ]);
       setActionMessage(`Booking ${status === 'confirmed' ? 'confirmed' : status === 'declined' ? 'declined' : status === 'completed' ? 'completed' : 'marked no-show'} successfully.`);
     } catch (error: unknown) {
-      setActionError(error instanceof Error ? error.message : 'The booking could not be updated.');
+      setActionError(`${error instanceof Error ? error.message : 'The booking could not be updated.'} Please try again.`);
     } finally {
       setUpdatingId(null);
     }

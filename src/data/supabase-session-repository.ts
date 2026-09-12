@@ -2,6 +2,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import type { Role, User } from '@/domain/models';
 import type { AuthCredentials, AuthResult, AuthStateListener, SessionRepository } from './repositories';
 import { getSupabaseClient } from './supabase-client';
+import { getErrorMessage } from '../domain/error';
 
 type SessionClient = {
   auth: {
@@ -60,7 +61,7 @@ export function createSupabaseSessionRepository(client?: SessionClient | null): 
           if (version === authStateVersion) listener(user);
         })
         .catch((error: unknown) => {
-          if (version === authStateVersion) listener(null, error instanceof Error ? error : new Error(String(error)));
+          if (version === authStateVersion) listener(null, new Error(getErrorMessage(error, 'Unable to load your account.')));
         });
     });
     return () => result.data.subscription.unsubscribe();

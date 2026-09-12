@@ -6,6 +6,7 @@ import { formatBookingDate } from '@/domain/date';
 import { presentBookingStatus } from '@/domain/booking-status';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
 import { useAppStore } from '@/state/app-store';
+import { getErrorMessage } from '@/domain/error';
 
 export default function ProviderBookingDetailsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -41,7 +42,7 @@ export default function ProviderBookingDetailsScreen() {
     try {
       await updateBookingStatus(bookingId, nextStatus);
     } catch (error: unknown) {
-      setActionError(error instanceof Error ? error.message : 'The appointment could not be updated.');
+      setActionError(getErrorMessage(error, 'The appointment could not be updated. Please try again.'));
     } finally {
       setUpdating(false);
     }

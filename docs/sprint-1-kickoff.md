@@ -103,7 +103,9 @@ Outcome: live customer cancellation and rescheduling use migration `0015`, enfor
 Owner: Frontend / QA
 Status: In progress
 
-Focus: remove remaining raw error rendering, standardize retry behavior, and make auth/session failures recover cleanly.
+Status: Complete with target validation pending
+
+Outcome: raw structured errors are normalized, Messages has a Retry action, availability and booking actions have bounded/retry-oriented feedback, and the web export passes. Remaining target checks: auth subscription recovery after teardown, a standalone Availability Retry button, and physical device/browser interaction validation.
 
 ## Next Ready Stories
 

@@ -6,6 +6,7 @@ import { addBooking, appendMessage, defaultPreferences, markMessagesRead, seedBo
 import { services as localServices } from '@/domain/catalog';
 import { getDataMode } from '@/data/supabase-client';
 import { createSupabaseRepositories } from '@/data/repository-factory';
+import { getErrorMessage } from '@/domain/error';
 
 type AppStore = {
   role: Role;
@@ -41,6 +42,7 @@ type AppStore = {
   resetDemoData: () => void;
   messageLoading: boolean;
   messageError: string | null;
+  refreshMessages: () => Promise<void>;
   sendMessage: (message: Omit<Message, 'id' | 'sentAt' | 'unread'>) => Promise<void>;
   markMessagesRead: (participantId: string) => Promise<void>;
   clearPersistenceError: () => void;
@@ -90,6 +92,21 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const authRequestVersion = useRef(0);
   const authenticatedUserId = useRef<string | null>(null);
 
+  const refreshMessages = useCallback(async () => {
+    if (getDataMode() !== 'supabase' || !currentUser) return;
+    setMessageLoading(true);
+    setMessageError(null);
+    try {
+      const nextMessages = await createSupabaseRepositories().message.listThreads(currentUser.id);
+      setMessages(nextMessages);
+    } catch (error) {
+      setMessageError(getErrorMessage(error));
+      throw error;
+    } finally {
+      setMessageLoading(false);
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     let active = true;
     const dataMode = getDataMode();
@@ -131,7 +148,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         setAuthBootstrapState(user ? 'authenticated' : 'unauthenticated');
       } catch (error) {
         if (active && version === authRequestVersion.current) {
-          setAuthError(error instanceof Error ? error.message : String(error));
+          setAuthError(getErrorMessage(error));
           setAuthBootstrapState('error');
         }
       }
@@ -173,7 +190,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       if (active) {
         void Promise.resolve().then(() => {
           if (!active) return;
-          setAuthError(error instanceof Error ? error.message : String(error));
+          setAuthError(getErrorMessage(error, 'Unable to restore your account session. Please try again.'));
           setAuthBootstrapState('error');
         });
       }
@@ -197,7 +214,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         setStudios(nextStudios);
         setBarbers(nextBarbers);
       } catch (error) {
-        if (active) setCatalogError(error instanceof Error ? error.message : String(error));
+        if (active) setCatalogError(getErrorMessage(error));
       } finally {
         if (active) setCatalogLoading(false);
       }
@@ -208,16 +225,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (getDataMode() !== 'supabase' || !currentUser) return;
-    let active = true;
-    setMessageLoading(true);
-    setMessageError(null);
-    createSupabaseRepositories().message.listThreads(currentUser.id).then((nextMessages) => {
-      if (active) setMessages(nextMessages);
-    }).catch((error) => {
-      if (active) setMessageError(error instanceof Error ? error.message : String(error));
-    }).finally(() => { if (active) setMessageLoading(false); });
-    return () => { active = false; };
-  }, [authBootstrapState, currentUser]);
+    void refreshMessages();
+  }, [authBootstrapState, currentUser, refreshMessages]);
 
   useEffect(() => {
     if (getDataMode() !== 'supabase') return;
@@ -239,7 +248,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         if (!active) return;
         setBookings(nextBookings);
       } catch (error) {
-        if (active) setBookingError(error instanceof Error ? error.message : String(error));
+        if (active) setBookingError(getErrorMessage(error));
       } finally {
         if (active) {
           setBookingLoading(false);
@@ -347,7 +356,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         setStudios(nextStudios);
         setBarbers(nextBarbers);
       } catch (error) {
-        setCatalogError(error instanceof Error ? error.message : String(error));
+        setCatalogError(getErrorMessage(error));
         throw error;
       } finally {
         setCatalogLoading(false);
@@ -377,6 +386,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     },
     messageLoading,
     messageError,
+    refreshMessages,
     sendMessage: async (message) => {
       if (getDataMode() === 'local') { setMessages((current) => appendMessage(current, message)); return; }
       if (!currentUser) throw new Error('Sign in to send a message');
@@ -397,7 +407,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       try {
         return await createSupabaseRepositories().session.signIn(credentials);
       } catch (error) {
-        setAuthError(error instanceof Error ? error.message : String(error));
+        setAuthError(getErrorMessage(error));
         throw error;
       }
     },
@@ -407,7 +417,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       try {
         return await createSupabaseRepositories().session.signUp(credentials);
       } catch (error) {
-        setAuthError(error instanceof Error ? error.message : String(error));
+        setAuthError(getErrorMessage(error));
         throw error;
       }
     },
@@ -417,7 +427,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       try {
         await createSupabaseRepositories().session.signOut();
       } catch (error) {
-        setAuthError(error instanceof Error ? error.message : String(error));
+        setAuthError(getErrorMessage(error));
         throw error;
       }
     },
@@ -434,12 +444,12 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         setAuthBootstrapState(user ? 'authenticated' : 'unauthenticated');
       } catch (error) {
         if (version !== authRequestVersion.current) return;
-        setAuthError(error instanceof Error ? error.message : String(error));
+        setAuthError(getErrorMessage(error));
         setAuthBootstrapState('error');
         throw error;
       }
     },
-  }), [authBootstrapState, authError, barbers, bookings, bookingError, bookingLoading, catalogError, catalogLoading, currentUser, hydrated, listAvailability, listProviderSlots, addProviderSlot, removeProviderSlot, listServices, messageError, messageLoading, messages, persistenceError, preferences, role, studios]);
+  }), [authBootstrapState, authError, barbers, bookings, bookingError, bookingLoading, catalogError, catalogLoading, currentUser, hydrated, listAvailability, listProviderSlots, addProviderSlot, removeProviderSlot, listServices, messageError, messageLoading, messages, persistenceError, preferences, refreshMessages, role, studios]);
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>;
 }

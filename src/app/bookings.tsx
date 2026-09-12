@@ -7,6 +7,7 @@ import type { Booking } from '@/domain/models';
 import { getDataMode } from '@/data/supabase-client';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
 import { presentBookingStatus } from '@/domain/booking-status';
+import { getErrorMessage } from '@/domain/error';
 
 export default function BookingsScreen() {
   const { bookings, hydrated, persistenceError, bookingLoading, bookingError, listAvailability, rescheduleBooking, cancelBooking, restoreBooking } = useAppStore();
@@ -42,7 +43,7 @@ export default function BookingsScreen() {
     ]).then((nextSlots) => {
       if (activeRequest) setAvailableSlots(nextSlots.filter((slot) => slot.available).map((slot) => slot.startsAt));
     }).catch((error: unknown) => {
-      if (activeRequest) setAvailabilityError(error instanceof Error ? error.message : 'Availability could not be loaded.');
+      if (activeRequest) setAvailabilityError(getErrorMessage(error, 'Availability could not be loaded. Please try again.'));
     }).finally(() => { if (activeRequest) setAvailabilityLoading(false); });
     return () => { activeRequest = false; };
   }, [listAvailability, live, selectedBooking]);
@@ -61,7 +62,7 @@ export default function BookingsScreen() {
         setSubmitting(true);
         setFeedback(null);
         setActionError(null);
-        void cancelBooking(booking.id).then(() => setFeedback('Your appointment was cancelled.')).catch((error: unknown) => setActionError(error instanceof Error ? error.message : 'Cancellation unavailable. Please try again.')).finally(() => setSubmitting(false));
+        void cancelBooking(booking.id).then(() => setFeedback('Your appointment was cancelled.')).catch((error: unknown) => setActionError(getErrorMessage(error, 'Cancellation unavailable. Please try again.'))).finally(() => setSubmitting(false));
       } },
     ]);
   }
@@ -76,7 +77,7 @@ export default function BookingsScreen() {
       setSelectedBooking(null);
       setFeedback('Your appointment was rescheduled.');
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : 'Rescheduling unavailable. Please try again.');
+      setActionError(getErrorMessage(error, 'Rescheduling unavailable. Please try again.'));
     } finally {
       setSubmitting(false);
     }

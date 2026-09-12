@@ -199,7 +199,7 @@ Progress note: static fixes and audit report are complete in [docs/accessibility
 
 - Owner: Frontend / QA
 - Priority: P1
-- Status: In progress
+- Status: Complete with target validation pending
 - Depends on: FS-002, FS-004
 
 As a user, I want errors to explain what happened and what I can do next.
@@ -210,6 +210,8 @@ Acceptance criteria:
 - Every network-backed screen has loading, empty, error, and retry behavior where applicable.
 - Auth expiry routes to sign-in without losing unrelated local demo data.
 - Errors are accessible to screen readers.
+
+Implementation note: shared structured-error normalization, Messages retry, bounded Availability loading, and retry-oriented booking/provider feedback are implemented. Target-device auth subscription recovery and a standalone Availability Retry button remain validation/follow-up gaps documented in the sprint kickoff.
 
 ## Sprint 4: Release Readiness Foundations
 

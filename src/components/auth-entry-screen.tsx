@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAppStore } from '@/state/app-store';
+import { getErrorMessage } from '@/domain/error';
 
 export default function AuthEntryScreen() {
   const { signIn, signUp } = useAppStore();
@@ -22,7 +23,7 @@ export default function AuthEntryScreen() {
         : await signUp({ email: email.trim(), password, displayName: displayName.trim() || undefined });
       if (result.requiresEmailConfirmation) setMessage('Account created. Check your email to confirm your account, then sign in.');
     } catch (submitError: unknown) {
-      setError(submitError instanceof Error ? submitError.message : 'Authentication failed. Please try again.');
+      setError(getErrorMessage(submitError, 'Authentication failed. Please try again.'));
     } finally {
       setSubmitting(false);
     }
