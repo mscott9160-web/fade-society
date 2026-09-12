@@ -102,7 +102,7 @@ Sprint goal: complete the provider workflow around the working Today view.
 
 - Owner: Frontend / UX
 - Priority: P1
-- Status: Planned
+- Status: Complete
 - Depends on: FS-003, FS-004
 
 As a barber, I want appointment details and customer context so that I can prepare for the service.
@@ -114,11 +114,13 @@ Acceptance criteria:
 - Customer contact data is limited to the authorized booking context.
 - Access to another studio's booking is rejected by the server.
 
+Implementation note: Today cards now open the provider detail route on native and web; the native route is registered as hidden navigation. Customer conversation context is preserved through booking IDs.
+
 ### FS-006: Complete And No-Show Actions
 
 - Owner: Backend / Provider
 - Priority: P1
-- Status: Planned
+- Status: In progress
 - Depends on: FS-003
 
 As a barber, I want to mark an appointment completed or no-show so that booking history is accurate.

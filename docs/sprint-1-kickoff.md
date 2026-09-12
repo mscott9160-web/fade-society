@@ -73,6 +73,13 @@ Focus: verify the working customer/provider flow at larger text, VoiceOver, cont
 
 Progress: source-level fixes and the audit matrix are complete. Physical iPhone/Android and browser interaction checks remain the only blocker to closing this story.
 
+### FS-006: Complete And No-Show Actions
+
+Owner: Backend / Provider
+Status: In progress
+
+Focus: add valid provider status transitions for completed and no-show appointments with server authorization and audit evidence.
+
 ## Next Ready Stories
 
 - FS-005: Provider Appointment Details

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatBookingDate } from '@/domain/date';
 import { presentBookingStatus } from '@/domain/booking-status';
@@ -9,6 +10,7 @@ import { useCustomerTheme } from '@/hooks/use-customer-theme';
 const STATUS_ACTION_TIMEOUT_MS = 20000;
 
 export default function TodayScreen() {
+  const router = useRouter();
   const theme = useCustomerTheme();
   const styles = createStyles(theme);
   const { role, bookings, bookingLoading, bookingError, updateBookingStatus } = useAppStore();
@@ -44,23 +46,23 @@ export default function TodayScreen() {
     <Text style={styles.title}>Today</Text>
     <Text style={styles.subtitle}>Review requests and keep the studio schedule moving.</Text>
     {(bookingError || actionError || actionMessage) && <Text accessibilityRole="alert" style={actionError || bookingError ? styles.error : styles.success}>{actionError ?? bookingError ?? actionMessage}</Text>}
-    {bookingLoading ? <View style={styles.stateCard}><Text style={styles.cardTitle}>Loading appointments</Text><Text style={styles.copy}>Checking the studio schedule...</Text></View> : pending.length === 0 ? <View style={styles.emptyCard}><Text style={styles.cardTitle}>No pending requests</Text><Text style={styles.copy}>New customer requests will appear here for review.</Text></View> : <View><Text style={styles.sectionTitle}>Needs review</Text>{pending.map((booking) => <BookingCard key={booking.id} booking={booking} updating={updatingId === booking.id} onReview={review} styles={styles} statusColors={theme.statusColors} />)}</View>}
+    {bookingLoading ? <View style={styles.stateCard}><Text style={styles.cardTitle}>Loading appointments</Text><Text style={styles.copy}>Checking the studio schedule...</Text></View> : pending.length === 0 ? <View style={styles.emptyCard}><Text style={styles.cardTitle}>No pending requests</Text><Text style={styles.copy}>New customer requests will appear here for review.</Text></View> : <View><Text style={styles.sectionTitle}>Needs review</Text>{pending.map((booking) => <BookingCard key={booking.id} booking={booking} updating={updatingId === booking.id} onReview={review} onOpen={() => router.push({ pathname: '/booking/[id]', params: { id: booking.id } })} styles={styles} statusColors={theme.statusColors} />)}</View>}
     <Text style={styles.sectionTitle}>Upcoming</Text>
-    {upcoming.length === 0 ? <Text style={styles.copy}>No confirmed appointments yet.</Text> : upcoming.map((booking) => <BookingCard key={booking.id} booking={booking} updating={false} onReview={review} styles={styles} statusColors={theme.statusColors} />)}
+    {upcoming.length === 0 ? <Text style={styles.copy}>No confirmed appointments yet.</Text> : upcoming.map((booking) => <BookingCard key={booking.id} booking={booking} updating={false} onReview={review} onOpen={() => router.push({ pathname: '/booking/[id]', params: { id: booking.id } })} styles={styles} statusColors={theme.statusColors} />)}
   </ScrollView></SafeAreaView>;
 }
 
-function BookingCard({ booking, updating, onReview, styles, statusColors }: { booking: ReturnType<typeof useAppStore>['bookings'][number]; updating: boolean; onReview: (id: string, status: 'confirmed' | 'declined') => void; styles: ReturnType<typeof createStyles>; statusColors: ReturnType<typeof useCustomerTheme>['statusColors'] }) {
+function BookingCard({ booking, updating, onReview, onOpen, styles, statusColors }: { booking: ReturnType<typeof useAppStore>['bookings'][number]; updating: boolean; onReview: (id: string, status: 'confirmed' | 'declined') => void; onOpen: () => void; styles: ReturnType<typeof createStyles>; statusColors: ReturnType<typeof useCustomerTheme>['statusColors'] }) {
   const presentation = presentBookingStatus(booking.status);
   const isPending = booking.status === 'pending';
-  return <View style={styles.card} accessibilityLabel={`${booking.customerName ?? 'Customer'}, ${booking.serviceName}, ${presentation.label}`}>
+  return <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`Open details for ${booking.customerName ?? 'customer'}'s ${booking.serviceName} appointment`} accessibilityHint="Opens appointment details" style={styles.card}>
     <View style={styles.cardHeader}><View style={styles.identity}><Text style={styles.customer}>{booking.customerName ?? 'Customer'}</Text><Text style={styles.cardTitle}>{booking.serviceName}</Text></View><Text style={styles.price}>${booking.price}</Text></View>
     <Text style={styles.time}>{formatBookingDate(booking.startsAt)}</Text>
     <Text style={styles.detail}>{booking.barberName} / {booking.studioName}</Text>
     <Text style={[styles.status, { color: statusColors[presentation.tone] }]}>{presentation.label}</Text>
     <Text style={styles.statusExplanation}>{presentation.explanation}</Text>
     {isPending ? <View style={styles.actions}><Pressable accessibilityRole="button" accessibilityLabel={`Confirm ${booking.customerName ?? 'customer'}'s ${booking.serviceName} appointment at ${formatBookingDate(booking.startsAt)}`} accessibilityHint="Confirms this appointment for the customer." accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => onReview(booking.id, 'confirmed')} style={styles.confirm}><Text style={styles.confirmText}>{updating ? 'Submitting...' : 'Confirm'}</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel={`Decline ${booking.customerName ?? 'customer'}'s ${booking.serviceName} appointment at ${formatBookingDate(booking.startsAt)}`} accessibilityHint="Declines this appointment for the customer." accessibilityState={{ disabled: updating, busy: updating }} disabled={updating} onPress={() => onReview(booking.id, 'declined')} style={styles.decline}><Text style={styles.declineText}>{updating ? 'Submitting...' : 'Decline'}</Text></Pressable></View> : <Text style={styles.readOnly}>Read-only appointment</Text>}
-  </View>;
+  </Pressable>;
 }
 
 function createStyles(theme: ReturnType<typeof useCustomerTheme>) {
