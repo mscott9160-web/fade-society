@@ -112,7 +112,7 @@ Status: Planned
 Goal: Operate the application safely at pilot scale and release gradually.
 
 - [ ] Add analytics funnel and marketplace success metrics.
-- [ ] Add crash reporting, structured logs, alerts, uptime checks, and incident runbook.
+- [ ] Add crash reporting, structured logs, alerts, and uptime checks. Incident runbook baseline is complete in [docs/incident-runbook.md](incident-runbook.md); capability integrations remain.
 - [ ] Add dependency/security scanning and secret scanning.
 - [ ] Add protected CI/CD with preview, internal, and production builds.
 - [ ] Verify iOS and Android identifiers, signing, privacy disclosures, notifications, and deep links.

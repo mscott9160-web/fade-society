@@ -85,13 +85,10 @@ The Supabase schema is an onboarding scaffold. The seed is catalog-first and saf
 
 In the Supabase Dashboard, open **SQL Editor** and run these scripts in this exact order:
 
-1. `supabase/migrations/0001_initial_schema.sql`
-2. `supabase/migrations/0002_booking_rpc.sql`
-3. `supabase/migrations/0003_profile_provisioning.sql`
-4. `supabase/migrations/0004_provider_profile_read_policy.sql`
-5. `supabase/seed.sql`
+1. `supabase/migrations/0001_initial_schema.sql` through `supabase/migrations/0015_customer_booking_changes.sql`
+2. `supabase/seed.sql`
 
-Run each script separately and confirm it completes before running the next one. The first three scripts create the schema, booking RPC, and Auth profile trigger. Migration `0004` adds the narrow authenticated catalog read for active barber profile names while retaining self-read and denying unrelated profiles; it does not add client mutation policies. The seed creates two studios and four services immediately. It also contains a guarded provider setup block that does nothing until the matching Auth user exists. On reruns, existing availability slot state is preserved so a booked slot is never reopened by the seed.
+Use the Supabase CLI migration workflow for a linked project: `npx supabase db push`. The migration range currently extends through `0015_customer_booking_changes.sql` and includes auth profile provisioning, provider authorization, messaging, availability management, and customer cancellation/rescheduling. The seed creates two studios and four services immediately. It also contains a guarded provider setup block that does nothing until the matching Auth user exists. On reruns, existing availability slot state is preserved so a booked slot is never reopened by the seed. See [docs/incident-runbook.md](docs/incident-runbook.md) for verification and escalation procedures.
 
 ### Auth User and Provider Profile
 

@@ -42,7 +42,7 @@ Implementation note: authenticated Supabase sign-out is complete. Local demo mod
 
 - Owner: Frontend / UX
 - Priority: P0
-- Status: In progress
+- Status: Complete
 - Depends on: FS-001
 
 As a customer or provider, I want clear feedback after a booking action so that I know whether the request succeeded, failed, or is still processing.
@@ -54,6 +54,8 @@ Acceptance criteria:
 - Failure feedback displays a readable server message and a retry path.
 - Pending, confirmed, declined, and failed states have distinct explanatory copy.
 - No action leaves an indefinite spinner.
+
+Implementation note: booking submission, provider review, confirmation lookup, cancellation, and rescheduling have bounded loading states and readable retry feedback.
 
 ### FS-003: Today Appointment Card Hierarchy
 
@@ -241,7 +243,7 @@ Implementation note: local coverage now includes 68 tests across 12 files, inclu
 
 - Owner: Platform / QA
 - Priority: P1
-- Status: Planned
+- Status: Complete with capability gaps tracked
 - Depends on: FS-010, FS-011
 
 As the team, we want enough operational evidence to diagnose failures during a pilot.
@@ -252,6 +254,8 @@ Acceptance criteria:
 - A basic incident/runbook page exists.
 - Supabase migration and environment checks are documented.
 - Crash reporting, uptime, and alerting gaps are explicitly tracked.
+
+Implementation note: [docs/incident-runbook.md](incident-runbook.md) now documents safe diagnostics, migration/environment verification, and current observability gaps. The runbook does not claim crash reporting, uptime monitoring, alerting, or on-call automation are implemented.
 
 ## Definition Of Done
 
