@@ -8,6 +8,8 @@ import { getDataMode } from '@/data/supabase-client';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
 import { presentBookingStatus } from '@/domain/booking-status';
 
+const CONFIRMATION_LOAD_TIMEOUT_MS = 15000;
+
 export default function ConfirmationScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
@@ -17,8 +19,15 @@ export default function ConfirmationScreen() {
   const [loadedBooking, setLoadedBooking] = React.useState<typeof bookings[number] | null>(null);
   const [lookupLoading, setLookupLoading] = React.useState(false);
   const [lookupError, setLookupError] = React.useState<string | null>(null);
+  const [loadTimedOut, setLoadTimedOut] = React.useState(false);
   const booking = bookings.find((item) => item.id === id) ?? loadedBooking;
   const status = booking ? presentBookingStatus(booking.status) : null;
+
+  React.useEffect(() => {
+    if (hydrated && !bookingLoading && !lookupLoading) return;
+    const timer = setTimeout(() => setLoadTimedOut(true), CONFIRMATION_LOAD_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [bookingLoading, hydrated, lookupLoading]);
 
   React.useEffect(() => {
     if (!id || !hydrated || bookingLoading || booking || getDataMode() !== 'supabase') return;
@@ -37,7 +46,7 @@ export default function ConfirmationScreen() {
   }, [booking, bookingLoading, getBooking, hydrated, id]);
 
   if (!hydrated || bookingLoading || lookupLoading) {
-    return <SafeAreaView style={styles.safeArea}><View style={styles.container}><Text style={styles.title}>Loading booking...</Text></View></SafeAreaView>;
+    return <SafeAreaView style={styles.safeArea}><View style={styles.container}><Text accessibilityRole={loadTimedOut ? 'alert' : undefined} style={styles.title}>{loadTimedOut ? 'Booking could not be loaded' : 'Loading booking...'}</Text>{loadTimedOut && <><Text style={styles.detail}>The booking service took too long to respond. Please try again.</Text><Pressable accessibilityRole="button" onPress={() => router.replace({ pathname: '/confirmation/[id]', params: { id: id ?? '' } })} style={styles.primary}><Text style={styles.primaryText}>Try again</Text></Pressable></>}</View></SafeAreaView>;
   }
 
   if (!booking) {

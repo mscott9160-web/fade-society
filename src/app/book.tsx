@@ -10,6 +10,7 @@ import { getDataMode } from '@/data/supabase-client';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
 
 type Step = 'profile' | 'service' | 'time' | 'review';
+const BOOKING_ACTION_TIMEOUT_MS = 20000;
 
 function getErrorMessage(error: unknown): string {
 	if (error instanceof Error) return error.message;
@@ -73,7 +74,10 @@ export default function BookScreen() {
 				router.replace({ pathname: '/confirmation/[id]', params: { id } });
 				return;
 			}
-			const booking = await createBooking({ serviceId: selectedService.id, barberId: currentProfile.barber.id, startsAt: selectedTime }, idempotencyKey);
+			const booking = await Promise.race([
+				createBooking({ serviceId: selectedService.id, barberId: currentProfile.barber.id, startsAt: selectedTime }, idempotencyKey),
+				new Promise<never>((_, reject) => setTimeout(() => reject(new Error('The booking request is taking too long. Please try again.')), BOOKING_ACTION_TIMEOUT_MS)),
+			]);
 			router.replace({ pathname: '/confirmation/[id]', params: { id: booking.id } });
 		} catch (nextError) {
 			setError(getErrorMessage(nextError));
@@ -91,7 +95,8 @@ export default function BookScreen() {
 			{step === 'time' && <><Text style={styles.sectionTitle}>Choose a time</Text><Text style={styles.copy}>Select an available appointment for {selectedService?.name}.</Text>{groupedTimes.length === 0 ? <Text style={styles.copy}>No availability is currently listed.</Text> : groupedTimes.map((group) => <View key={group.date}><Text style={styles.meta}>{group.label}</Text><View style={styles.grid}>{group.times.map(({ value, label }) => { const taken = !live && reserved.has(value); return <Pressable key={value} disabled={taken} accessibilityRole="button" accessibilityState={{ selected: selectedTime === value, disabled: taken }} onPress={() => setSelectedTime(value)} style={[styles.timeButton, selectedTime === value && styles.active, taken && styles.taken]}><Text style={[styles.timeText, selectedTime === value && styles.activeText]}>{label}{taken ? ' (Taken)' : ''}</Text></Pressable>; })}</View></View>)}</>}
 			{step === 'review' && selectedService && <View><Text style={styles.sectionTitle}>Review appointment</Text><View style={styles.review}><Text style={styles.rowTitle}>{selectedService.name}</Text><Text style={styles.meta}>{selectedService.durationMinutes} minutes</Text><Text style={styles.meta}>{formatBookingDate(selectedTime)}</Text><Text style={styles.meta}>{profile.studio.name} • {profile.studio.address}</Text><Text style={styles.price}>${selectedService.price}</Text></View></View>}
 
-		<View style={styles.actions}>{step === 'profile' ? null : <Pressable accessibilityRole="button" onPress={() => setStep(step === 'review' ? 'time' : step === 'time' ? 'profile' : 'profile')} style={styles.secondary}><Text style={styles.secondaryText}>Back</Text></Pressable>}{step === 'time' && <Pressable accessibilityRole="button" disabled={!selectedTime} onPress={() => setStep('review')} style={[styles.primary, !selectedTime && styles.disabled]}><Text style={styles.primaryText}>Review booking</Text></Pressable>}{step === 'review' && <Pressable accessibilityRole="button" disabled={confirming} onPress={() => void confirm()} style={[styles.primary, confirming && styles.disabled]}><Text style={styles.primaryText}>{confirming ? 'Sending...' : 'Confirm request'}</Text></Pressable>}</View>
+			{error && step === 'review' && <Text accessibilityRole="alert" style={styles.copy}>{error}</Text>}
+			<View style={styles.actions}>{step === 'profile' ? null : <Pressable accessibilityRole="button" disabled={confirming} onPress={() => setStep(step === 'review' ? 'time' : step === 'time' ? 'profile' : 'profile')} style={styles.secondary}><Text style={styles.secondaryText}>Back</Text></Pressable>}{step === 'time' && <Pressable accessibilityRole="button" disabled={!selectedTime} onPress={() => setStep('review')} style={[styles.primary, !selectedTime && styles.disabled]}><Text style={styles.primaryText}>Review booking</Text></Pressable>}{step === 'review' && <Pressable accessibilityRole="button" disabled={confirming} onPress={() => void confirm()} style={[styles.primary, confirming && styles.disabled]}><Text style={styles.primaryText}>{confirming ? 'Submitting request...' : error ? 'Try again' : 'Confirm request'}</Text></Pressable>}</View>
 	</ScrollView></SafeAreaView>;
 }
 
