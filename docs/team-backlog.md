@@ -175,7 +175,7 @@ Implementation note: provider Profile now shows role/studio context, provider me
 
 - Owner: Backend / Provider / QA
 - Priority: P1
-- Status: In progress
+- Status: Complete with policy gaps pending
 - Depends on: BP-003, BP-004
 
 As a provider, I want safe recovery for late, cancelled, no-show, and incorrectly updated appointments so that common disruptions do not require support intervention.
@@ -187,11 +187,13 @@ Acceptance criteria:
 - Customer/provider receive consistent resulting state.
 - Audit events capture actor, previous state, resulting state, and reason when supplied.
 
+Implementation note: no-show confirmation and grace-period guidance are implemented on Today and appointment details. Server-side grace-period policy, reason capture, correction RPCs, and notifications remain future operational work.
+
 ### BP-010: Barber-Side Live Validation Matrix
 
 - Owner: QA / Backend
 - Priority: P0
-- Status: Planned
+- Status: In progress
 - Depends on: BP-002, BP-003, BP-004, BP-007
 
 As the team, we want live multi-account and device evidence that the barber workflow is authorized, concurrent-safe, and usable.
