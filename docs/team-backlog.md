@@ -156,7 +156,7 @@ Implementation note: migration `0020_schedule_based_availability.sql` adds overl
 
 - Owner: Frontend / UX
 - Priority: P1
-- Status: In progress
+- Status: Complete
 - Depends on: BP-005, BP-007
 
 As a barber, I want Profile and Settings to reflect my provider identity and studio context so that the app does not feel like a customer screen with hidden tools.
@@ -169,11 +169,13 @@ Acceptance criteria:
 - Owner/admin scope is distinguishable from barber scope.
 - Sign out and accessibility controls remain reachable.
 
+Implementation note: provider Profile now shows role/studio context, provider metrics, and direct Today/Messages/Availability/Settings links. Customer Profile behavior remains separate.
+
 ### BP-009: Provider Exception Recovery
 
 - Owner: Backend / Provider / QA
 - Priority: P1
-- Status: Planned
+- Status: In progress
 - Depends on: BP-003, BP-004
 
 As a provider, I want safe recovery for late, cancelled, no-show, and incorrectly updated appointments so that common disruptions do not require support intervention.

@@ -4,13 +4,15 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '@/state/app-store';
 import { useCustomerTheme } from '@/hooks/use-customer-theme';
+import { getDataMode } from '@/data/supabase-client';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { preferences, updatePreferences, currentUser, role, signOut } = useAppStore();
+  const { preferences, updatePreferences, currentUser, role, signOut, barbers, studios } = useAppStore();
   const theme = useCustomerTheme();
   const scaled = (size: number) => size * theme.textScale;
   const [signingOut, setSigningOut] = useState(false);
+  const providerStudio = currentUser && studios.find((studio) => studio.id === barbers.find((barber) => barber.id === currentUser.id)?.studioId);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -26,7 +28,7 @@ export default function SettingsScreen() {
     <Text style={[styles.subtitle, { color: theme.secondaryText, fontSize: scaled(14) }]}>Customize your Fade Society experience.</Text>
     <View style={[styles.section, { backgroundColor: theme.surface }]}><Text style={[styles.sectionTitle, { color: theme.text, fontSize: 17 * theme.textScale }]}>Appearance</Text><SettingRow label="Dark mode" description="Use a darker color theme throughout the app." value={preferences.darkMode} onValueChange={(value) => updatePreferences({ darkMode: value })} theme={theme} /><SettingRow label="Larger text" description="Increase text sizing for easier reading." value={preferences.largeText} onValueChange={(value) => updatePreferences({ largeText: value })} theme={theme} /></View>
     <View style={styles.section}><Text style={[styles.sectionTitle, { color: theme.text, fontSize: scaled(17) }]}>Accessibility</Text><SettingRow label="Accessibility hints" description="Include extra spoken guidance on interactive controls." value={preferences.accessibilityHints} onValueChange={(value) => updatePreferences({ accessibilityHints: value })} theme={theme} /><Pressable accessibilityRole="button" accessibilityLabel="VoiceOver instructions" onPress={() => Alert.alert('VoiceOver is controlled by iOS', 'Open iPhone Settings > Accessibility > VoiceOver to turn VoiceOver on or off. Fade Society provides labels and hints for supported controls.')} style={styles.infoRow}><View style={styles.infoCopy}><Text style={styles.rowTitle}>VoiceOver</Text><Text style={styles.rowDescription}>VoiceOver is controlled by your iPhone settings.</Text></View><Text style={styles.link}>Instructions</Text></Pressable></View>
-    <View style={styles.section}><Text style={styles.sectionTitle}>Account</Text><Text style={styles.accountEmail}>{currentUser?.displayName ?? 'Demo account'}</Text><Text style={styles.accountRole}>Role: {role}</Text><Pressable accessibilityRole="button" accessibilityLabel="Sign out" accessibilityState={{ disabled: signingOut }} disabled={signingOut} onPress={() => void handleSignOut()} style={styles.signOut}><Text style={styles.signOutText}>{signingOut ? 'Signing out...' : 'Sign out'}</Text></Pressable></View>
+    <View style={[styles.section, { backgroundColor: theme.surface }]}><Text style={[styles.sectionTitle, { color: theme.text, fontSize: scaled(17) }]}>Account</Text><Text style={[styles.accountEmail, { color: theme.secondaryText }]}>{currentUser?.displayName ?? (getDataMode() === 'local' ? 'Demo account' : 'Account')}</Text><Text style={[styles.accountRole, { color: theme.secondaryText }]}>Role: {role}</Text>{providerStudio && <Text style={[styles.accountRole, { color: theme.secondaryText }]}>Studio: {providerStudio.name}</Text>}<Pressable accessibilityRole="button" accessibilityLabel="Sign out" accessibilityState={{ disabled: signingOut }} disabled={signingOut} onPress={() => void handleSignOut()} style={styles.signOut}><Text style={styles.signOutText}>{signingOut ? 'Signing out...' : 'Sign out'}</Text></Pressable></View>
   </ScrollView></SafeAreaView>;
 }
 
