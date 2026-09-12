@@ -193,7 +193,7 @@ Implementation note: no-show confirmation and grace-period guidance are implemen
 
 - Owner: QA / Backend
 - Priority: P0
-- Status: In progress
+- Status: Blocked on live fixtures
 - Depends on: BP-002, BP-003, BP-004, BP-007
 
 As the team, we want live multi-account and device evidence that the barber workflow is authorized, concurrent-safe, and usable.
@@ -205,6 +205,8 @@ Acceptance criteria:
 - Message retry/read scope is tested with two bookings involving the same participants.
 - VoiceOver, larger text, browser keyboard, and dark/light mode are tested on target devices.
 - Findings include route, role, device, reproduction steps, severity, and owner.
+
+Implementation note: the executable plan is in [docs/barber-side-live-validation.md](barber-side-live-validation.md). The current Supabase project has only the customer and owning-barber accounts; owner/admin, cross-studio, unrelated-customer, and two-client concurrency checks require additional fixtures or a disposable project.
 
 ## Working Agreements
 
