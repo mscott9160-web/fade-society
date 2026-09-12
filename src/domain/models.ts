@@ -57,6 +57,7 @@ export type Booking = {
 
 export type Message = {
   id: string;
+  conversationId: string;
   bookingId?: string;
   participantId: string;
   participantName: string;

@@ -75,7 +75,7 @@ Implementation note: migration `0017_safe_provider_status_transitions.sql` narro
 
 - Owner: Frontend / Backend
 - Priority: P0
-- Status: In progress
+- Status: Complete
 - Depends on: BP-001, BP-002
 
 As a barber, I want a direct message inbox with booking context so that customer communication does not depend on opening Today first.
@@ -90,11 +90,13 @@ Acceptance criteria:
 - Read state is scoped to one booking conversation.
 - Message retries reuse a stable idempotency key.
 
+Implementation note: migration `0018_conversation_first_class_messaging.sql` makes conversation ID first-class, scopes read state to one conversation, and preserves one logical send idempotency key across retries.
+
 ### BP-005: Run My Day Schedule
 
 - Owner: Frontend / UX
 - Priority: P0
-- Status: Planned
+- Status: In progress
 - Depends on: BP-002, BP-003
 
 As a barber, I want a chronological day view so that I can identify my next appointment and unresolved work within seconds.

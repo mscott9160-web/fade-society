@@ -45,8 +45,8 @@ export type AvailabilityRepository = {
 
 export type MessageRepository = {
   listThreads: (userId: string) => Promise<Message[]>;
-  send: (userId: string, participantId: string, body: string, idempotencyKey: string) => Promise<Message>;
-  markRead: (userId: string, participantId: string) => Promise<void>;
+  send: (userId: string, conversationId: string, body: string, idempotencyKey: string) => Promise<Message>;
+  markRead: (userId: string, conversationId: string) => Promise<void>;
 };
 
 export type SessionRepository = {

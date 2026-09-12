@@ -50,6 +50,16 @@ describe('Supabase authorization and concurrency migration contracts', () => {
      expect(schema).toContain('primary key (actor_id, idempotency_key)');
   });
 
+  it('makes conversation identity first-class for message writes and reads', () => {
+    const sql = migration('0018_conversation_first_class_messaging.sql');
+    expect(sql).toContain('conversation_id uuid');
+    expect(sql).toContain('p_conversation_id uuid');
+    expect(sql).toContain("jsonb_build_object('conversation_id', p_conversation_id, 'body', p_body)");
+    expect(sql).toContain('public.messaging_actor_can_access(p_conversation_id)');
+    expect(sql).toContain('insert into public.conversation_read_state values (p_conversation_id, auth.uid(), now())');
+    expect(sql).toContain('revoke all on function public.send_message(uuid, text, text)');
+  });
+
   it('keeps provider availability behind scoped, future-only RPCs', () => {
     const sql = migration('0014_provider_availability_slots.sql');
     expect(sql).toContain('create or replace function public.list_provider_availability');

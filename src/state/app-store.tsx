@@ -43,8 +43,8 @@ type AppStore = {
   messageLoading: boolean;
   messageError: string | null;
   refreshMessages: () => Promise<void>;
-  sendMessage: (message: Omit<Message, 'id' | 'sentAt' | 'unread'>) => Promise<void>;
-  markMessagesRead: (participantId: string) => Promise<void>;
+  sendMessage: (message: Omit<Message, 'id' | 'sentAt' | 'unread'>, idempotencyKey?: string) => Promise<void>;
+  markMessagesRead: (conversationId: string) => Promise<void>;
   clearPersistenceError: () => void;
   updatePreferences: (changes: Partial<UserPreferences>) => void;
   signIn: (credentials: AuthCredentials) => Promise<AuthResult>;
@@ -398,17 +398,17 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     messageLoading,
     messageError,
     refreshMessages,
-    sendMessage: async (message) => {
+    sendMessage: async (message, idempotencyKey = `message-${Date.now()}-${Math.random().toString(36).slice(2)}`) => {
       if (getDataMode() === 'local') { setMessages((current) => appendMessage(current, message)); return; }
       if (!currentUser) throw new Error('Sign in to send a message');
-      const sent = await createSupabaseRepositories().message.send(currentUser.id, message.participantId, message.body, `message-${Date.now()}`);
+      const sent = await createSupabaseRepositories().message.send(currentUser.id, message.conversationId, message.body, idempotencyKey);
       setMessages((current) => [...current, sent]);
     },
-    markMessagesRead: async (participantId) => {
-      if (getDataMode() === 'local') { setMessages((current) => markMessagesRead(current, participantId)); return; }
+    markMessagesRead: async (conversationId) => {
+      if (getDataMode() === 'local') { setMessages((current) => markMessagesRead(current, conversationId)); return; }
       if (!currentUser) return;
-      await createSupabaseRepositories().message.markRead(currentUser.id, participantId);
-      setMessages((current) => markMessagesRead(current, participantId));
+      await createSupabaseRepositories().message.markRead(currentUser.id, conversationId);
+      setMessages((current) => markMessagesRead(current, conversationId));
     },
     clearPersistenceError: () => setPersistenceError(null),
     updatePreferences: (changes) => setPreferences((current) => ({ ...current, ...changes })),

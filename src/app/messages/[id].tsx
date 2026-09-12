@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,27 +7,30 @@ import { useCustomerTheme } from '@/hooks/use-customer-theme';
 import { getErrorMessage } from '@/domain/error';
 
 export default function ConversationScreen() {
-  const { id, bookingId } = useLocalSearchParams<{ id?: string; bookingId?: string }>();
+  const { id, conversationId, bookingId } = useLocalSearchParams<{ id?: string; conversationId?: string; bookingId?: string }>();
   const router = useRouter();
   const { messages, bookings, messageLoading, messageError, sendMessage, markMessagesRead } = useAppStore();
   const theme = useCustomerTheme();
   const [draft, setDraft] = useState('');
   const [sendError, setSendError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const thread = messages.filter((message) => message.participantId === id && (!bookingId || message.bookingId === bookingId));
+  const sendAttemptKey = useRef<string | null>(null);
+  const thread = messages.filter((message) => message.conversationId === conversationId);
   const participant = thread[0]?.participantName || 'Studio';
   const booking = bookings.find((item) => item.id === bookingId || item.id === thread[0]?.bookingId);
 
-  useEffect(() => { if (id) void markMessagesRead(id); }, [id, markMessagesRead]);
+  useEffect(() => { if (conversationId) void markMessagesRead(conversationId); }, [conversationId, markMessagesRead]);
 
   async function submit() {
     const body = draft.trim();
-    if (!body || !id || sending || messageError) return;
+    if (!body || !id || !conversationId || sending || messageError) return;
     setSendError(null);
     setSending(true);
     try {
-      await sendMessage({ participantId: id, participantName: participant, bookingId: booking?.id, body });
+      sendAttemptKey.current ??= `message-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      await sendMessage({ conversationId, participantId: id, participantName: participant, bookingId: booking?.id, body }, sendAttemptKey.current);
       setDraft('');
+      sendAttemptKey.current = null;
     } catch (error) {
       setSendError(getErrorMessage(error, 'Message could not be sent. Please try again.'));
     } finally {

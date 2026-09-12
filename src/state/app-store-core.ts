@@ -19,7 +19,7 @@ export const seedBookings: Booking[] = [
 ];
 
 export const seedMessages: Message[] = [
-  { id: 'message-1', participantId: 'marcus-j', participantName: 'Marcus J.', body: 'Your appointment request is ready to review.', sentAt: '2026-08-16T14:00:00.000Z', unread: true },
+  { id: 'message-1', conversationId: 'conversation-1', participantId: 'marcus-j', participantName: 'Marcus J.', body: 'Your appointment request is ready to review.', sentAt: '2026-08-16T14:00:00.000Z', unread: true },
 ];
 
 export const defaultPreferences: UserPreferences = { darkMode: false, largeText: false, accessibilityHints: true };
@@ -53,7 +53,7 @@ export function validatePersistedState(value: unknown): PersistedState | null {
     Number.isFinite(booking.price) &&
     typeof booking.cancellationPolicy === 'string'
   ));
-  const messages = (candidate.messages || []).filter((message): message is Message => Boolean(message) && typeof message === 'object' && typeof message.id === 'string' && typeof message.participantId === 'string' && typeof message.participantName === 'string' && typeof message.body === 'string' && typeof message.sentAt === 'string' && typeof message.unread === 'boolean');
+  const messages = (candidate.messages || []).filter((message): message is Message => Boolean(message) && typeof message === 'object' && typeof message.id === 'string' && typeof message.conversationId === 'string' && typeof message.participantId === 'string' && typeof message.participantName === 'string' && typeof message.body === 'string' && typeof message.sentAt === 'string' && typeof message.unread === 'boolean');
   const preferences = candidate.preferences && typeof candidate.preferences === 'object'
     ? { ...defaultPreferences, ...(candidate.preferences as Partial<UserPreferences>) }
     : defaultPreferences;
@@ -64,8 +64,8 @@ export function appendMessage(messages: Message[], message: Omit<Message, 'id' |
   return [...messages, { ...message, id: `message-${Date.now()}`, sentAt: new Date().toISOString(), unread: false }];
 }
 
-export function markMessagesRead(messages: Message[], participantId: string): Message[] {
-  return messages.map((message) => message.participantId === participantId ? { ...message, unread: false } : message);
+export function markMessagesRead(messages: Message[], conversationId: string): Message[] {
+  return messages.map((message) => message.conversationId === conversationId ? { ...message, unread: false } : message);
 }
 
 export function addBooking(bookings: Booking[], booking: Omit<Booking, 'id' | 'status' | 'confirmationCode' | 'cancellationPolicy'> & Partial<Pick<Booking, 'cancellationPolicy'>>): Booking[] {
