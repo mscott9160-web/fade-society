@@ -1,14 +1,16 @@
 # Barber-Side Live Validation
 
-Status: Blocked on test fixtures and two-client execution
+Status: Fixtures ready; two-client/device execution pending
 Last updated: 2026-09-12
 
 ## Available Live Accounts
 
 - Customer: `customer.demo@example.com`
 - Owning barber: `barber.demo@example.com`
+- Studio owner: `owner.demo@example.com` with active Downtown membership
+- Platform admin fixture: `admin.demo@example.com` with explicit Downtown membership
 
-The current project does not yet contain owner/admin, second-studio barber, or unrelated-customer fixtures. Passwords are intentionally not recorded here.
+The current project still needs a second-studio barber, unrelated customer, and two-client/device execution. Passwords are intentionally not recorded here.
 
 ## Checks Ready With Existing Accounts
 
@@ -87,7 +89,7 @@ end;
 $$;
 ```
 
-The second-studio barber and unrelated customer require Auth users first. The second-studio barber also needs a seeded second studio barber record before cross-studio checks can run.
+The second-studio barber and unrelated customer require Auth users first. The second-studio barber also needs a seeded second studio barber record before cross-studio checks can run. Owner/admin profiles and Downtown memberships are now provisioned and verified.
 
 ## Evidence To Record
 
