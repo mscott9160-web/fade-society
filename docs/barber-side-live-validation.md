@@ -1,6 +1,6 @@
 # Barber-Side Live Validation
 
-Status: Fixtures ready; two-client/device execution pending
+Status: Fixtures ready; authenticated two-client/device execution pending
 Last updated: 2026-09-12
 
 ## Available Live Accounts
@@ -9,8 +9,10 @@ Last updated: 2026-09-12
 - Owning barber: `barber.demo@example.com`
 - Studio owner: `owner.demo@example.com` with active Downtown membership
 - Platform admin fixture: `admin.demo@example.com` with explicit Downtown membership
+- Second-studio barber: `barber.eastside@example.com` with active Eastside membership and two future slots
+- Unrelated customer: `customer.unrelated@example.com`
 
-The current project still needs a second-studio barber, unrelated customer, and two-client/device execution. Passwords are intentionally not recorded here.
+The account fixtures are complete. Passwords are intentionally not recorded here. Two-client/device execution remains pending.
 
 ## Checks Ready With Existing Accounts
 
