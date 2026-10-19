@@ -36,7 +36,7 @@ The local demo intentionally does not process real payments or use a live bookin
 - Accessibility labels and selected/disabled states across the primary flow
 - Vitest contract and domain tests
 - ESLint and TypeScript quality gates
-- Supabase/PostgreSQL schema and transactional booking RPC scaffold
+- Supabase/PostgreSQL schema and a designed transactional booking RPC with an idempotency key; the app currently runs on local state, with the migration documenting the path to production
 - EAS development build configuration for iOS
 
 ## Why it exists
