@@ -1,4 +1,13 @@
-import type { AvailabilitySlot, Barber, Booking, Message, Role, Service, Studio, User } from '@/domain/models';
+import type {
+  AvailabilitySlot,
+  Barber,
+  Booking,
+  Message,
+  Role,
+  Service,
+  Studio,
+  User,
+} from "@/domain/models";
 
 export type CreateBookingInput = {
   serviceId: string;
@@ -22,7 +31,12 @@ export type CatalogRepository = {
 
 export type MessageRepository = {
   listThreads: (userId: string) => Promise<Message[]>;
-  send: (userId: string, participantId: string, body: string, idempotencyKey: string) => Promise<Message>;
+  send: (
+    userId: string,
+    participantId: string,
+    body: string,
+    idempotencyKey: string,
+  ) => Promise<Message>;
   markRead: (userId: string, participantId: string) => Promise<void>;
 };
 

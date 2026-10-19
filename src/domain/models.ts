@@ -1,5 +1,6 @@
-export type Role = 'customer' | 'barber' | 'owner' | 'admin';
-export type BookingStatus = 'pending' | 'confirmed' | 'declined' | 'failed' | 'cancelled' | 'completed';
+export type Role = "customer" | "barber" | "owner" | "admin";
+export type BookingStatus =
+  "pending" | "confirmed" | "declined" | "failed" | "cancelled" | "completed";
 
 export type User = {
   id: string;

@@ -6,7 +6,7 @@ export type CreateBookingRequest = {
 
 export type CreateBookingResponse = {
   bookingId: string;
-  status: 'pending' | 'confirmed';
+  status: "pending" | "confirmed";
 };
 
 export type CreateBookingRpcArgs = {
@@ -17,9 +17,12 @@ export type CreateBookingRpcArgs = {
 };
 
 export type CreateBookingRpc = (
-  functionName: 'create_booking',
+  functionName: "create_booking",
   args: CreateBookingRpcArgs,
-) => Promise<{ data: { id: string; status: 'pending' | 'confirmed' } | null; error: { message: string } | null }>;
+) => Promise<{
+  data: { id: string; status: "pending" | "confirmed" } | null;
+  error: { message: string } | null;
+}>;
 
 export type EdgeFunctionRequest = {
   headers: Headers;
@@ -33,11 +36,14 @@ export type EdgeFunctionResponse = {
 
 export function validateCreateBookingRequest(
   request: EdgeFunctionRequest,
-): { authorization: string; idempotencyKey: string; input: CreateBookingRequest } | EdgeFunctionResponse {
-  const authorization = request.headers.get('authorization');
-  const idempotencyKey = request.headers.get('idempotency-key');
-  if (!authorization?.startsWith('Bearer ')) return { status: 401, body: { error: 'Authentication required' } };
-  if (!idempotencyKey) return { status: 400, body: { error: 'Idempotency-Key header required' } };
+):
+  | { authorization: string; idempotencyKey: string; input: CreateBookingRequest }
+  | EdgeFunctionResponse {
+  const authorization = request.headers.get("authorization");
+  const idempotencyKey = request.headers.get("idempotency-key");
+  if (!authorization?.startsWith("Bearer "))
+    return { status: 401, body: { error: "Authentication required" } };
+  if (!idempotencyKey) return { status: 400, body: { error: "Idempotency-Key header required" } };
   return { authorization, idempotencyKey, input: {} as CreateBookingRequest };
 }
 
@@ -46,27 +52,31 @@ export async function createBooking(
   rpc?: CreateBookingRpc,
 ): Promise<EdgeFunctionResponse> {
   const validation = validateCreateBookingRequest(request);
-  if ('status' in validation) return validation;
+  if ("status" in validation) return validation;
 
   let body: Partial<CreateBookingRequest>;
   try {
     body = (await request.json()) as Partial<CreateBookingRequest>;
   } catch {
-    return { status: 400, body: { error: 'Invalid JSON body' } };
+    return { status: 400, body: { error: "Invalid JSON body" } };
   }
 
   if (
-    typeof body.serviceId !== 'string' ||
-    typeof body.barberId !== 'string' ||
-    typeof body.startsAt !== 'string' ||
+    typeof body.serviceId !== "string" ||
+    typeof body.barberId !== "string" ||
+    typeof body.startsAt !== "string" ||
     Number.isNaN(Date.parse(body.startsAt))
   ) {
-    return { status: 400, body: { error: 'serviceId, barberId, and a valid startsAt are required' } };
+    return {
+      status: 400,
+      body: { error: "serviceId, barberId, and a valid startsAt are required" },
+    };
   }
 
-  if (!rpc) return { status: 501, body: { error: 'Transactional create_booking RPC is not configured' } };
+  if (!rpc)
+    return { status: 501, body: { error: "Transactional create_booking RPC is not configured" } };
 
-  const result = await rpc('create_booking', {
+  const result = await rpc("create_booking", {
     p_service_id: body.serviceId,
     p_barber_id: body.barberId,
     p_starts_at: body.startsAt,
@@ -74,7 +84,10 @@ export async function createBooking(
   });
 
   if (result.error || !result.data) {
-    return { status: 409, body: { error: result.error?.message ?? 'Booking could not be created' } };
+    return {
+      status: 409,
+      body: { error: result.error?.message ?? "Booking could not be created" },
+    };
   }
 
   return { status: 200, body: { bookingId: result.data.id, status: result.data.status } };
